@@ -1,7 +1,7 @@
 from copy import deepcopy as dc
 
 """## Definição do problema"""
-# @title
+
 # ###Solução com teste de consistencia
 # #============================================================================
 class SOLUCAO:
@@ -114,8 +114,10 @@ class SOLUCAO:
   #   for i in range(self.lenL):
   #     self.inL[self.L_linha[i]]=True
 
+
+
 # @title **Máxima Interscção de k-Subconjuntos**
-#=========================================================================
+#==============================================================================================
 class KMIS:
   """
     Representa uma instância do problema kMIS.
@@ -221,4 +223,3 @@ class KMIS:
   def __repr__(self):
     return f"|L|={self.tamL} \t|R|={self.tamR} \tp={self.p:.4f} \tk={self.k}"#\nL[:3]={[[si, (bin(si)[2:]).zfill(self.tamR)[::-1]] for si in self.L[:3]]}
   
-  __all__ = ['SOLUCAO', 'KMIS']

@@ -6,7 +6,6 @@ from numpy.random import choice
 
 """## **Heurísticas - Base**"""
 
-
 """**HG** |<BR> [Bogue, 2013](#scrollTo=ogM8m0ZZUWYq)"""
 #======================================================================================
 def HG_Bogue13(kmis: KMIS, t_lim: float = 120.0) -> SOLUCAO: #Heuristica Gulosa de Bogue 2013
@@ -45,12 +44,9 @@ def HG_Bogue13_parcial(kmis: KMIS, L_entrada : SOLUCAO, t_lim: float = 120.0) ->
   return L
 
 """**Heuristica Gulosa Estendida**
-
 É a "MaxAways" (ou "kInter"), mas com todos os Si in L testados como primeira escolha.
-
 Utilizada em [José Robertty, 2020](#scrollTo=ausmti4Msbm9) para a Redução das instâncias.
 """
-
 def kInterEstendida(kmis : KMIS, t_lim: float = 120.0) -> SOLUCAO:
   t_inicio = time.time()
 
@@ -84,7 +80,6 @@ def kInterEstendida(kmis : KMIS, t_lim: float = 120.0) -> SOLUCAO:
   return Lb
 
 """**LS** |<BR> [Casado, 2022](#scrollTo=vUV56ei_QkEj)"""
-
 #===========================================================================
 # Usado como Intensificação
 def LocalSearch(kmis: KMIS, L_entrada: SOLUCAO, t_lim: float = 120.0) -> SOLUCAO:
@@ -124,7 +119,6 @@ def LocalSearch(kmis: KMIS, L_entrada: SOLUCAO, t_lim: float = 120.0) -> SOLUCAO
   return L
 
 """**VND** |<BR> [Dias, 2020](#scrollTo=Dub1Q9UAepci)"""
-
 #=======================================================================================
 # Usado como Intensificação
 def VND(kmis: KMIS, L_entrada: SOLUCAO, t_lim: float = 120.0, rep: int = 3) -> SOLUCAO:
@@ -194,7 +188,6 @@ def VND(kmis: KMIS, L_entrada: SOLUCAO, t_lim: float = 120.0, rep: int = 3) -> S
   return L
 
 """**VND |<BR> Mod. Autor"""
-
 #========================================================================
 # Usado como Intensificação
 def VND2(kmis: KMIS, L_entrada: SOLUCAO, t_lim: float = 120.0) -> SOLUCAO:
@@ -270,7 +263,6 @@ def VND2(kmis: KMIS, L_entrada: SOLUCAO, t_lim: float = 120.0) -> SOLUCAO:
   return L
 
 """**Variable Neighborhood Descent 2018** |<BR> [Robertty, 2018](#scrollTo=kpxrB6wQ3C7R)"""
-
 #=======================================================================================
 def vizinhancaVND_2018(kmis:KMIS, L_entrada : SOLUCAO, t : int) -> SOLUCAO:
   L = dc(L_entrada)
@@ -330,8 +322,7 @@ def VND_2018(kmis : KMIS, L_entrada: SOLUCAO, t_lim : float = 120.0,
   return Lb
 
 """**TS** |<BR> [Casado, 2022](#scrollTo=vUV56ei_QkEj)"""
-
-#=================================================================
+#================================================================
 class Tabu: #Short Term Memory and Exit List (S\STM) control
   def __init__(self, L : SOLUCAO):
     self.stm_front = 0
@@ -404,7 +395,6 @@ def TabuSearch(kmis : KMIS, L_entrada : SOLUCAO, t_lim : float = 120.0,
   return Lb
 
 """**GRASP** |<BR> [Casado, 2022](#scrollTo=vUV56ei_QkEj)"""
-
 #============================ GRASP ==============================================
 def GRASP(CONSTRUCAO, INTENSIFICACAO, arg_contrucao, arg_intensificacao,
           kmis : KMIS, maxIter : int = 50, t_lim : float = 120.0) -> SOLUCAO:
@@ -484,7 +474,6 @@ def CRG(kmis, L, alpha) -> SOLUCAO:
   return L
 
 #==== Definições do GRASP com variações =============
-
 def GRASP_GR_LS(kmis : KMIS, alpha : float = 0.4, maxIter : int = 50, t_lim : float = 120.0) -> SOLUCAO:
   return GRASP(CGR, LocalSearch, {'alpha':alpha}, {}, kmis, maxIter, t_lim)
 
@@ -492,7 +481,6 @@ def GRASP_RG_LS(kmis : KMIS, alpha : float = 0.4, maxIter : int = 50, t_lim : fl
   return GRASP(CRG, LocalSearch,  {'alpha':alpha}, {}, kmis, maxIter, t_lim)
 
 """**ANT** |<BR> [Dias, 2022](#scrollTo=WhinMVuS_iPw)"""
-
 #===========================================================================================
 def ANT(INTENSIFICACAO, arg_intensificacao,
         kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
@@ -620,7 +608,6 @@ def ANT_LS(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.
   return ANT(LocalSearch, {}, kmis, alpha, beta, rho, q_zero, qtd_formigas, Q_reativo, maxIter, t_lim)
 
 """**ANT2** |<BR> Mod. Autor"""
-
 #==========================================================================================================
 def ANT2(INTENSIFICACAO, arg_intensificacao,
         kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
@@ -741,13 +728,9 @@ def ANT2(INTENSIFICACAO, arg_intensificacao,
         statAresta[idx]['count'] = 0
   return Lb
 
-"""## **Heurísticas - Mista**
+"""## **Heurísticas - Mista**"""
 
----
-
-GRASP+TS |  <BR> [Casado, 2022](#scrollTo=vUV56ei_QkEj)
-"""
-
+"""#GRASP+TS |  <BR> [Casado, 2022](#scrollTo=vUV56ei_QkEj)"""
 #=============================================================================================
 def GRASP_RG_TS(kmis : KMIS, alpha : float = 0.4, tau : float = 0.5,
                 gama : int = 10, maxIter : int = 50, t_lim : float = 120.0) -> SOLUCAO:
@@ -757,7 +740,6 @@ def GRASP_RG_TS(kmis : KMIS, alpha : float = 0.4, tau : float = 0.5,
                kmis=kmis, maxIter=maxIter, t_lim=t_lim)
 
 """ANT+TS |<BR> Mod. Autor"""
-
 #======================================================================================
 def ANT_TS(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
            q_zero : float = 0.8, qtd_formigas : int = 5, Q_reativo : int = 5,
@@ -769,7 +751,6 @@ def ANT_TS(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.
              qtd_formigas=qtd_formigas, Q_reativo=Q_reativo, maxIter=maxIter, t_lim=t_lim)
 
 """ANT2+TS |<BR> Mod. Autor"""
-
 #================================================================================================
 def ANT2_TS(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
            q_zero : float = 0.8, qtd_formigas_p :float = 0.1, tau : float = 0.5, gama : int = 5,
@@ -780,7 +761,6 @@ def ANT2_TS(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0
               qtd_formigas_p=qtd_formigas_p, maxIter=maxIter, t_lim=t_lim)
 
 """GRASP+VND |  <BR> Mod. Autor"""
-
 #============================================================================
 def GRASP_RG_VND(kmis : KMIS, alpha : float = 0.4,
                  maxIter : int = 50, t_lim : float = 120.0) -> SOLUCAO:
@@ -789,7 +769,6 @@ def GRASP_RG_VND(kmis : KMIS, alpha : float = 0.4,
                kmis=kmis, maxIter=maxIter, t_lim=t_lim)
 
 """GRASP+VND2 |  <BR> Mod. Autor"""
-
 #============================================================================
 def GRASP_RG_VND2(kmis : KMIS, alpha : float = 0.4,
                  maxIter : int = 50, t_lim : float = 120.0) -> SOLUCAO:
@@ -798,8 +777,7 @@ def GRASP_RG_VND2(kmis : KMIS, alpha : float = 0.4,
                kmis=kmis, maxIter=maxIter, t_lim=t_lim)
 
 """ANT+VND |<BR> [Dias, 2022](#scrollTo=WhinMVuS_iPw)"""
-
-#====================================================================================
+#=====================================================================================
 def ANT_VND(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
             q_zero : float = 0.8, qtd_formigas : int = 5, Q_reativo : int = 5,
             maxIter : int = 30, t_lim : float = 120.0) -> SOLUCAO:
@@ -809,7 +787,6 @@ def ANT_VND(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0
              Q_reativo=Q_reativo, maxIter=maxIter, t_lim=t_lim)
 
 """ANT+VND2 |<BR> Mod. Autor"""
-
 #=============================================================================================
 def ANT_VND2(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
             q_zero : float = 0.8, qtd_formigas : int = 5, Q_reativo : int = 5,
@@ -820,7 +797,6 @@ def ANT_VND2(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 
              Q_reativo=Q_reativo, maxIter=maxIter, t_lim=t_lim)
 
 """ANT2+VND |<BR> Mod. Autor"""
-
 #==========================================================================================================
 def ANT2_VND(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
             q_zero : float = 0.8, qtd_formigas_p : float = 0.1, maxIter : int = 30, t_lim : float = 120.0) -> SOLUCAO:
@@ -830,7 +806,6 @@ def ANT2_VND(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 
               maxIter=maxIter, t_lim=t_lim)
 
 """ANT2+VND2 |<BR> Mod. Autor"""
-
 #================================================================================================================
 def ANT2_VND2(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float = 0.3,
             q_zero : float = 0.8, qtd_formigas_p : float = 0.1, maxIter : int = 30, t_lim : float = 120.0) -> SOLUCAO:
@@ -839,5 +814,20 @@ def ANT2_VND2(kmis : KMIS, alpha: float = 1.0, beta : float = 0.8, rho : float =
               beta=beta, rho=rho, q_zero=q_zero, qtd_formigas_p=qtd_formigas_p,
               maxIter=maxIter, t_lim=t_lim)
 
-
-#@title Funções auxiliares
+# Dicionario agregador das funções (global)
+Heuristicas = {
+    'KIEst'       : kInterEstendida,
+    'HG'          : HG_Bogue13,
+    'VND'         : VND,
+    'LS'          : LocalSearch,
+    'TS'          : TabuSearch,
+    'GRASP_RG_TS' : GRASP_RG_TS,
+    'GRASP_RG_VND': GRASP_RG_VND,
+    'GRASP_RG_VND2': GRASP_RG_VND2,
+    'ANT_TS'      : ANT_TS,
+    'ANT_VND'     : ANT_VND,
+    'ANT_VND2'    : ANT_VND2,
+    'ANT2_TS'     : ANT2_TS,
+    'ANT2_VND'    : ANT2_VND,
+    'ANT2_VND2'   : ANT2_VND2,
+}

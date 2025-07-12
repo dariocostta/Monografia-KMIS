@@ -7,22 +7,11 @@ import os                       # Controle de pastas
 
 INTERACTIONS = {} #Entradas do usuario pela get_bool
 
-Heuristicas = {
-    'KIEst'       : kInterEstendida,
-    # 'HG'          : HG_Bogue13,
-    # 'VND'         : VND,
-    # 'LS'          : LocalSearch,
-    # 'TS'          : TabuSearch,
-    'GRASP_RG_TS' : GRASP_RG_TS,
-    'GRASP_RG_VND': GRASP_RG_VND,
-    'GRASP_RG_VND2': GRASP_RG_VND2,
-    'ANT_TS'      : ANT_TS,
-    'ANT_VND'     : ANT_VND,
-    'ANT_VND2'    : ANT_VND2,
-    'ANT2_TS'     : ANT2_TS,
-    'ANT2_VND'    : ANT2_VND,
-    'ANT2_VND2'   : ANT2_VND2,
-}
+classes = {
+    (0.1, 0.1): 'C1', (0.1, 0.4): 'C2', (0.1, 0.7): 'C3',
+    (0.4, 0.1): 'C4', (0.4, 0.4): 'C5', (0.4, 0.7): 'C6',
+    (0.7, 0.1): 'C7', (0.7, 0.4): 'C8', (0.7, 0.7): 'C9'
+  }
 
 #============= Todas as funções secundarias usadas para rodar os testes ==============
 def run(kmis, H, arg) -> tuple[int, float, SOLUCAO]:
@@ -176,3 +165,97 @@ def get_boolean_input(prompt, name):
       else:
           print("Por favor, responda: 's' ou 'n'.")
 
+
+"""**Conjuntos**"""
+
+def Lu(kmis : KMIS, u : int, y : int) -> list[int]:
+  #Conjunto "indesejado" junto a u na partição L
+  luy = []  #  L_u(lambda) conjunto resultante
+  for v in range(kmis.tamL):
+    if v!=u:
+      if ((kmis.L[u] & kmis.L[v])).bit_count() < y:
+        luy.append(v)
+  return luy
+
+def Rv(kmis : KMIS, v : int, k : int) -> list[int]:
+  #Conjunto "indesejado" junto a v na partição R
+  rvk = []  #R_v(k)
+  for u in range(kmis.tamR):
+    if u!=v:
+      if ((kmis.R[v] & kmis.R[u])).bit_count() < k:
+        rvk.append(u)
+  return rvk
+
+def Lu_tam(kmis : KMIS, u : int, y : int) -> int:
+  luy_tam = 0  #  |L_u(lambda)| valor
+  for v in range(kmis.tamL):
+    if v!=u:
+      if ((kmis.L[u] & kmis.L[v])).bit_count() < y:
+        luy_tam += 1
+  return luy_tam
+
+def Rv_tam(kmis : KMIS, v : int, k : int) -> int:
+  rvk_tam = 0  # |R_v(k)|
+  for u in range(kmis.tamR):
+    if u!=v:
+      if ((kmis.R[v] & kmis.R[u])).bit_count() < k:
+        rvk_tam += 1
+  return rvk_tam
+
+
+"""Funções de estatísticas dos testes""" # Planos para reduzir isso, dá pra juntar algumas creio
+#===============================================================================================
+def junta_repeticoes(g):
+  return pd.Series({'vmin': g['val'].min(), 'vavg': g['val'].mean(),
+                    'vmax': g['val'].max(), 'tavg': g['time'].mean()})
+def medias(g):
+  return g.mean().rename(lambda x: 'm'+x)  # gera: mvmin, mvmax, mvavg, mtavg
+def melhor_por_instancia(g):
+  return pd.Series({'vmin_max': g['vmin'].max(),
+                    'vavg_max': g['vavg'].max(),
+                    'vmax_max': g['vmax'].max(),
+                    'tavg_min': g['tavg'].min()})
+def limites_argumento(g):
+  return pd.Series({'mvmin_min'   : g['mvmin'].min()   , 'mvmin_max'   : g['mvmin'].max(),
+                    'mvavg_min'   : g['mvavg'].min()   , 'mvavg_max'   : g['mvavg'].max(),
+                    'mvmax_min'   : g['mvmax'].min()   , 'mvmax_max'   : g['mvmax'].max(),
+                    'mtavg_min'   : g['mtavg'].min()   , 'mtavg_max'   : g['mtavg'].max(),
+                    'cnt_vmin_min': g['cnt_vmin'].min(), 'cnt_vmin_max': g['cnt_vmin'].max(),
+                    'cnt_vavg_min': g['cnt_vavg'].min(), 'cnt_vavg_max': g['cnt_vavg'].max(),
+                    'cnt_vmax_min': g['cnt_vmax'].min(), 'cnt_vmax_max': g['cnt_vmax'].max(),
+                    'cnt_tavg_min': g['cnt_tavg'].min(), 'cnt_tavg_max': g['cnt_tavg'].max(),
+                    })
+
+def score_time_on(r):
+  return pd.Series(
+    {  #mv = media valor  e cnt = count
+      'score':
+      int(100*(
+        10*(((r['mvmin']-r['mvmin_min'])/(r['mvmin_max']-r['mvmin_min'])) if (r['mvmin_max']-r['mvmin_min']) > 0 else 1) +
+        20*(((r['mvavg']-r['mvavg_min'])/(r['mvavg_max']-r['mvavg_min'])) if (r['mvavg_max']-r['mvavg_min']) > 0 else 1) +
+        10*(((r['mvmax']-r['mvmax_min'])/(r['mvmax_max']-r['mvmax_min'])) if (r['mvmax_max']-r['mvmax_min']) > 0 else 1) +
+        10*(((r['mtavg_max']-r['mtavg'])/(r['mtavg_max']-r['mtavg_min'])) if (r['mtavg_max']-r['mtavg_min']) > 0 else 1) +
+        10*(((r['cnt_vmin']-r['cnt_vmin_min'])/(r['cnt_vmin_max']-r['cnt_vmin_min'])) if (r['cnt_vmin_max']-r['cnt_vmin_min']) > 0 else 1) +
+        20*(((r['cnt_vavg']-r['cnt_vavg_min'])/(r['cnt_vavg_max']-r['cnt_vavg_min'])) if (r['cnt_vavg_max']-r['cnt_vavg_min']) > 0 else 1) +
+        10*(((r['cnt_vmax']-r['cnt_vmax_min'])/(r['cnt_vmax_max']-r['cnt_vmax_min'])) if (r['cnt_vmax_max']-r['cnt_vmax_min']) > 0 else 1) +
+        10*(((r['cnt_tavg']-r['cnt_tavg_min'])/(r['cnt_tavg_max']-r['cnt_tavg_min'])) if (r['cnt_tavg_max']-r['cnt_tavg_min']) > 0 else 1)
+        ))/100
+    }
+  )
+
+def score_time_off(r):
+  return pd.Series(
+    {  #mv = media valor  e cnt = count
+      'score':
+      int(100*(
+        15*(((r['mvmin']-r['mvmin_min'])/(r['mvmin_max']-r['mvmin_min'])) if (r['mvmin_max']-r['mvmin_min']) > 0 else 1) +
+        20*(((r['mvavg']-r['mvavg_min'])/(r['mvavg_max']-r['mvavg_min'])) if (r['mvavg_max']-r['mvavg_min']) > 0 else 1) +
+        15*(((r['mvmax']-r['mvmax_min'])/(r['mvmax_max']-r['mvmax_min'])) if (r['mvmax_max']-r['mvmax_min']) > 0 else 1) +
+        #0*(((r['mtavg_max']-r['mtavg'])/(r['mtavg_max']-r['mtavg_min'])) if (r['mtavg_max']-r['mtavg_min']) > 0 else 1) +
+        15*(((r['cnt_vmin']-r['cnt_vmin_min'])/(r['cnt_vmin_max']-r['cnt_vmin_min'])) if (r['cnt_vmin_max']-r['cnt_vmin_min']) > 0 else 1) +
+        20*(((r['cnt_vavg']-r['cnt_vavg_min'])/(r['cnt_vavg_max']-r['cnt_vavg_min'])) if (r['cnt_vavg_max']-r['cnt_vavg_min']) > 0 else 1) +
+        15*(((r['cnt_vmax']-r['cnt_vmax_min'])/(r['cnt_vmax_max']-r['cnt_vmax_min'])) if (r['cnt_vmax_max']-r['cnt_vmax_min']) > 0 else 1)
+        #0*(((r['cnt_tavg']-r['cnt_tavg_min'])/(r['cnt_tavg_max']-r['cnt_tavg_min'])) if (r['cnt_tavg_max']-r['cnt_tavg_min']) > 0 else 1)
+        ))/100
+    }
+  )

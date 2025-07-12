@@ -1,14 +1,13 @@
-"""Heuristicas_Aplicadas_kMIS.ipynb
+"""Heuristicas_Aplicadas_kMIS.py
 
 ## Aplicação de Heuristicas ao kMIS
 **Autor**: Dario Filipe da Silva Costa
 **Instituição**: Universidade Federal do Ceará
 Trabalho de conclusão de curso, para obtenção de bacharel em Matemática Industrial.
-
-## Sumário
-## Bibliotecas
 """
 
+
+## Bibliotecas
 from bibkmis.typeskmis import *
 from bibkmis.heuristicaskmis import *
 from bibkmis.auxkmis import *
@@ -22,43 +21,26 @@ from tqdm import tqdm           # Barrinha de progresso
 import ast                      # Ler os litearias de tipos simples
 import os                       # Controle de pastas
 import sys                      # Modificar o nome da aba no PowerShell (Local)
-from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED    # Dividir entre nucleos
+from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED    # Dividir entre nucleos_teste_param
 
-"""Checagem do processador e versão do python."""
 
+# Pequena alteração no titulo do PowerSheel.
 if os.name == 'nt':
   script_name = os.path.basename(sys.argv[0])
 
   command = (f'powershell -command "function Set-ConsoleTitle '+
              f'{{ $host.ui.rawui.windowtitle = \'{script_name}\' }}" ; Set-ConsoleTitle"')
   os.system(command)
-# from tensorflow.python.client import device_lib
-# !cat /proc/cpuinfo
-# !python --version
-# !pip list
 
+
+#Código principal (ainda estranho, pois eram varias celulas no notebook)
 def main():
-  """## **Instâncias**
-
-  ---
-  **Gerar Instâncias**
-  """
-
+  ## **Instâncias**
   #======================================================================================                     <--------- GERAR INSTANCIAS
-  #markdown Carrega as instâncias do arquivo 'instancias.csv'
-  #markdown ou gera novas seguindo os parametros abaixo.
-  #markdown Caso não haja arquivo, baixa o salvo no drive.
-  tamL_list = "40, 60, 80, 100, 140, 180, 200, 240, 280, 300" #param {type: "string"}
-  tamL_list = eval('[' + tamL_list + ']')
-  instancias_por_classe = 2 #param {type: "slider", min:1, max:30, step:1}
+  # Carrega as instâncias do arquivo 'instancias.csv' ou gera novas seguindo os parametros abaixo.
   # ====== Inicialização dos Dados ==========
-
-  # Classe de identificação baseada em (p, k)
-  classes = {
-    (0.1, 0.1): 'C1', (0.1, 0.4): 'C2', (0.1, 0.7): 'C3',
-    (0.4, 0.1): 'C4', (0.4, 0.4): 'C5', (0.4, 0.7): 'C6',
-    (0.7, 0.1): 'C7', (0.7, 0.4): 'C8', (0.7, 0.7): 'C9'
-  }
+  tamL_list = [40, 60, 80, 100, 140, 180, 200, 240, 280, 300]
+  instancias_por_classe = 2
 
   # ======= Geração de Instâncias ==========
   dfI = pd.DataFrame()
@@ -105,12 +87,9 @@ def main():
       dfI = pd.read_csv('instancias.csv', converters=conv)
       print(f'Leitura de instancias.csv ({dfI.shape[0]} linhas) bem sucedida.')
     except:
-      try:
-        # !gdown -- '19XM0pQq5JLPJ7M2O1qxvQq8upuE8-u6Y'
-        dfI = pd.read_csv('instancias.csv', converters=conv)
-        print(f'Leitura de instancias.csv ({dfI.shape[0]} linhas) bem sucedida.')
-      except:
-        print('\n\n\t\tArquivo instancias não encontrado!!\n\n')
+      print('\n\n\t\tArquivo instancias não encontrado!!\n\n')
+      assert dfI.shape[0]>0 , "Sem instâncias não continua! Peque o arquivo 'instancias.csv'."
+
     # Reinstanciar objetos KMIS a partir das linhas do CSV
     dictI['kmis_b14'] = []
     for _, row in dfI.iterrows():
@@ -137,7 +116,7 @@ def main():
   percentual = percentual.astype(float)
 
   # Criando a figura
-  fig, ax = plt.subplots(1, 2, figsize=(10, 4), gridspec_kw={'width_ratios': [3, 2]})
+  _, ax = plt.subplots(1, 2, figsize=(10, 4), gridspec_kw={'width_ratios': [3, 2]})
 
   # Gráfico de barras
   cores = ['#AEC6CF', '#CFCFC4']
@@ -168,47 +147,11 @@ def main():
   col_labels = ['Classe', 'p', 'k', 'Qtd.']
   ax[1].axis('tight')
   ax[1].axis('off')
-  tabela_plot = ax[1].table(cellText=tabela_dados,
-                      colLabels=col_labels,
-                      loc='center', cellLoc='center')
+  ax[1].table(cellText=tabela_dados,
+              colLabels=col_labels,
+              loc='center', cellLoc='center')
 
   plt.show()
-
-  """**Conjuntos**"""
-
-  def Lu(kmis : KMIS, u : int, y : int) -> list[int]:
-    #Conjunto "indesejado" junto a u na partição L
-    luy = []  #  L_u(lambda) conjunto resultante
-    for v in range(kmis.tamL):
-      if v!=u:
-        if ((kmis.L[u] & kmis.L[v])).bit_count() < y:
-          luy.append(v)
-    return luy
-
-  def Rv(kmis : KMIS, v : int, k : int) -> list[int]:
-    #Conjunto "indesejado" junto a v na partição R
-    rvk = []  #R_v(k)
-    for u in range(kmis.tamR):
-      if u!=v:
-        if ((kmis.R[v] & kmis.R[u])).bit_count() < k:
-          rvk.append(u)
-    return rvk
-
-  def Lu_tam(kmis : KMIS, u : int, y : int) -> int:
-    luy_tam = 0  #  |L_u(lambda)| valor
-    for v in range(kmis.tamL):
-      if v!=u:
-        if ((kmis.L[u] & kmis.L[v])).bit_count() < y:
-          luy_tam += 1
-    return luy_tam
-
-  def Rv_tam(kmis : KMIS, v : int, k : int) -> int:
-    rvk_tam = 0  # |R_v(k)|
-    for u in range(kmis.tamR):
-      if u!=v:
-        if ((kmis.R[v] & kmis.R[u])).bit_count() < k:
-          rvk_tam += 1
-    return rvk_tam
 
   """Redução Bogue (2014) |<BR> [Bogue, 2014](#scrollTo=dyXmWyS0zIQS)"""
 
@@ -246,7 +189,6 @@ def main():
     return kmis
 
   """**Executar Redução**"""
-
   #===============================================================================                    <------- Executar Redução
   dictIR = {'kmis_b14':[], '|L|_b14':[],'|R|_b14':[], 'L_b14':[], 'tempo_reducao':[],
             'Llabel_b14':[], 'Rlabel_b14':[], 'classe_b14':[], 'p_b14':[]}
@@ -279,8 +221,10 @@ def main():
     print('Redução salva com sucesso!')
     # dfI.drop(['L', 'L_b14', 'Llabel_b14', 'Rlabel_b14'], axis = 1, inplace=True)
 
-    """Analise da Redução"""
 
+
+  """Analise da Redução"""
+  #=============================================================================== 
   dfI_temSol = dfI[dfI['temSol']].reset_index()
   print((dfI_temSol['tempo_reducao']).describe())
   #display(dfI_temSol[['classe', 'classe_b14']])
@@ -324,10 +268,11 @@ def main():
   ax.spines['right'].set_visible(False)
 
   plt.tight_layout()
+  plt.savefig('tamanho_classe_diferenca_pos_reducao.pdf', format='pdf', bbox_inches='tight')
   plt.show()
 
-   # @title --------- TESTE ZONE -----------
-    #=================================================================================================
+  # @title --------- TESTE ZONE -----------
+  #=================================================================================================
   if False: #get_boolean_input('Ativar Teste Zone?', 'Teste Zone'):
     num_instancias = 5
     reps = 3
@@ -399,68 +344,7 @@ def main():
 
     print(f'Tempo total do teste: {int(total_tempo/60)} min e {(total_tempo % 60):.4f} seg.')
 
-  """## **Parâmetros**
-
-  ---
-
-  Funções de estatísticas do teste
-  """
-
-  #===============================================================================================
-  def junta_repeticoes(g):
-    return pd.Series({'vmin': g['val'].min(), 'vavg': g['val'].mean(),
-                      'vmax': g['val'].max(), 'tavg': g['time'].mean()})
-  def medias(g):
-    return g.mean().rename(lambda x: 'm'+x)  # gera: mvmin, mvmax, mvavg, mtavg
-  def melhor_por_instancia(g):
-    return pd.Series({'vmin_max': g['vmin'].max(),
-                      'vavg_max': g['vavg'].max(),
-                      'vmax_max': g['vmax'].max(),
-                      'tavg_min': g['tavg'].min()})
-  def limites_argumento(g):
-    return pd.Series({'mvmin_min'   : g['mvmin'].min()   , 'mvmin_max'   : g['mvmin'].max(),
-                      'mvavg_min'   : g['mvavg'].min()   , 'mvavg_max'   : g['mvavg'].max(),
-                      'mvmax_min'   : g['mvmax'].min()   , 'mvmax_max'   : g['mvmax'].max(),
-                      'mtavg_min'   : g['mtavg'].min()   , 'mtavg_max'   : g['mtavg'].max(),
-                      'cnt_vmin_min': g['cnt_vmin'].min(), 'cnt_vmin_max': g['cnt_vmin'].max(),
-                      'cnt_vavg_min': g['cnt_vavg'].min(), 'cnt_vavg_max': g['cnt_vavg'].max(),
-                      'cnt_vmax_min': g['cnt_vmax'].min(), 'cnt_vmax_max': g['cnt_vmax'].max(),
-                      'cnt_tavg_min': g['cnt_tavg'].min(), 'cnt_tavg_max': g['cnt_tavg'].max(),
-                      })
-
-  def score_time_on(r):
-    return pd.Series(
-      {  #mv = media valor  e cnt = count
-        'score':
-        int(100*(
-          10*(((r['mvmin']-r['mvmin_min'])/(r['mvmin_max']-r['mvmin_min'])) if (r['mvmin_max']-r['mvmin_min']) > 0 else 1) +
-          20*(((r['mvavg']-r['mvavg_min'])/(r['mvavg_max']-r['mvavg_min'])) if (r['mvavg_max']-r['mvavg_min']) > 0 else 1) +
-          10*(((r['mvmax']-r['mvmax_min'])/(r['mvmax_max']-r['mvmax_min'])) if (r['mvmax_max']-r['mvmax_min']) > 0 else 1) +
-          10*(((r['mtavg_max']-r['mtavg'])/(r['mtavg_max']-r['mtavg_min'])) if (r['mtavg_max']-r['mtavg_min']) > 0 else 1) +
-          10*(((r['cnt_vmin']-r['cnt_vmin_min'])/(r['cnt_vmin_max']-r['cnt_vmin_min'])) if (r['cnt_vmin_max']-r['cnt_vmin_min']) > 0 else 1) +
-          20*(((r['cnt_vavg']-r['cnt_vavg_min'])/(r['cnt_vavg_max']-r['cnt_vavg_min'])) if (r['cnt_vavg_max']-r['cnt_vavg_min']) > 0 else 1) +
-          10*(((r['cnt_vmax']-r['cnt_vmax_min'])/(r['cnt_vmax_max']-r['cnt_vmax_min'])) if (r['cnt_vmax_max']-r['cnt_vmax_min']) > 0 else 1) +
-          10*(((r['cnt_tavg']-r['cnt_tavg_min'])/(r['cnt_tavg_max']-r['cnt_tavg_min'])) if (r['cnt_tavg_max']-r['cnt_tavg_min']) > 0 else 1)
-          ))/100
-      }
-    )
-
-  def score_time_off(r):
-    return pd.Series(
-      {  #mv = media valor  e cnt = count
-        'score':
-        int(100*(
-          15*(((r['mvmin']-r['mvmin_min'])/(r['mvmin_max']-r['mvmin_min'])) if (r['mvmin_max']-r['mvmin_min']) > 0 else 1) +
-          20*(((r['mvavg']-r['mvavg_min'])/(r['mvavg_max']-r['mvavg_min'])) if (r['mvavg_max']-r['mvavg_min']) > 0 else 1) +
-          15*(((r['mvmax']-r['mvmax_min'])/(r['mvmax_max']-r['mvmax_min'])) if (r['mvmax_max']-r['mvmax_min']) > 0 else 1) +
-          #0*(((r['mtavg_max']-r['mtavg'])/(r['mtavg_max']-r['mtavg_min'])) if (r['mtavg_max']-r['mtavg_min']) > 0 else 1) +
-          15*(((r['cnt_vmin']-r['cnt_vmin_min'])/(r['cnt_vmin_max']-r['cnt_vmin_min'])) if (r['cnt_vmin_max']-r['cnt_vmin_min']) > 0 else 1) +
-          20*(((r['cnt_vavg']-r['cnt_vavg_min'])/(r['cnt_vavg_max']-r['cnt_vavg_min'])) if (r['cnt_vavg_max']-r['cnt_vavg_min']) > 0 else 1) +
-          15*(((r['cnt_vmax']-r['cnt_vmax_min'])/(r['cnt_vmax_max']-r['cnt_vmax_min'])) if (r['cnt_vmax_max']-r['cnt_vmax_min']) > 0 else 1)
-          #0*(((r['cnt_tavg']-r['cnt_tavg_min'])/(r['cnt_tavg_max']-r['cnt_tavg_min'])) if (r['cnt_tavg_max']-r['cnt_tavg_min']) > 0 else 1)
-          ))/100
-      }
-    )
+  """## **Parâmetros**"""
 
   """ **Teste de Parametros**"""
 
@@ -472,16 +356,16 @@ def main():
   tempo_save_A   = 300 #param {type: "slider", min:5, max:600, step:5}
 
   LIMITE_agendamentos  = 40
-  nucleos = 10 if os.cpu_count() == 12 else 2
+  nucleos_teste_param = 10 if os.cpu_count() == 12 else 2
 
   dArgTest = {
     'ANT_VND' :{'alpha': [1], 'beta':[0.6, 0.8, 1.2], 'rho':[0.1, 0.3, 0.5], 'q_zero':[0.7, 0.8, 0.9], 'qtd_formigas':[0.1, 0.2, 0.3], 'Q_reativo':[5],                           'maxIter': [10000], 't_lim': [t_lim_A]},
     'GRASP_RG_TS' :{'alpha': [0.2, 0.5, 0.8], 'tau': [0.1, 0.3, 0.5], 'gama': [5, 10, 15],   'maxIter': [10000], 't_lim': [t_lim_A]},
-    # 'KIEst':{'t_lim':[t_lim_A]},
-    # 'GRASP_RG_VND':{'alpha': [0.2, 0.5, 0.8],                              'maxIter': [100000], 't_lim': [t_lim_A]},
-    # 'ANT_TS'  :{'alpha': [1], 'beta':[0.8], 'rho':[0.3], 'q_zero':[0.2, 0.5, 0.8], 'qtd_formigas':[0.1, 0.2, 0.3], 'Q_reativo':[5], 'tau': [0.5], 'gama':[5], 'maxIter': [100000], 't_lim': [t_lim_A]},
-    # 'ANT2_VND':{'alpha': [1], 'beta':[0.6, 0.8, 1.2], 'rho':[0.1, 0.3, 0.5], 'q_zero':[0.2, 0.5, 0.8], 'qtd_formigas_p':[0.1, 0.2, 0.3],                                             'maxIter': [100000], 't_lim': [t_lim_A]},
-    # 'ANT2_TS' :{'alpha': [1], 'beta':[0.8], 'rho':[0.3], 'q_zero':[0.2, 0.5, 0.8], 'qtd_formigas_p':[0.1, 0.2, 0.3],                   'tau': [0.5], 'gama':[5], 'maxIter': [100000], 't_lim': [t_lim_A]},
+    'KIEst':{'t_lim':[t_lim_A]},
+    'GRASP_RG_VND':{'alpha': [0.2, 0.5, 0.8],                              'maxIter': [100000], 't_lim': [t_lim_A]},
+    'ANT_TS'  :{'alpha': [1], 'beta':[0.8], 'rho':[0.3], 'q_zero':[0.2, 0.5, 0.8], 'qtd_formigas':[0.1, 0.2, 0.3], 'Q_reativo':[5], 'tau': [0.5], 'gama':[5], 'maxIter': [100000], 't_lim': [t_lim_A]},
+    'ANT2_VND':{'alpha': [1], 'beta':[0.6, 0.8, 1.2], 'rho':[0.1, 0.3, 0.5], 'q_zero':[0.2, 0.5, 0.8], 'qtd_formigas_p':[0.1, 0.2, 0.3],                                             'maxIter': [100000], 't_lim': [t_lim_A]},
+    'ANT2_TS' :{'alpha': [1], 'beta':[0.8], 'rho':[0.3], 'q_zero':[0.2, 0.5, 0.8], 'qtd_formigas_p':[0.1, 0.2, 0.3],                   'tau': [0.5], 'gama':[5], 'maxIter': [100000], 't_lim': [t_lim_A]},
   }
   dfAT = pd.DataFrame()
   if get_boolean_input('Iniciar teste de parâmetros?', 'Teste Parametros'):
@@ -491,8 +375,11 @@ def main():
       os.makedirs(os.getcwd()+"/saves_AT", exist_ok=True)
     except: print("Erro ao criar a pasta saves_AT!")
     qtdInstancias = dfI[dfI['temSol']].shape[0]
+    # O grupoTreino foi fixado depois do sorteio, para poder reler o arquivo e continuar de onde parou, em caso de teste pausado
+    # (algo que foi evitado, os testes rodaram em uma unica execução!)
     grupoTreino_AT = ([152, 237, 270, 147, 288, 148, 269, 151, 304, 211, 336, 192, 319, 276, 102, 155, 24,
-                      196, 191, 217, 163, 232, 249, 180, 109, 328, 331, 169, 216,  72,  17, 214,  13, 337])
+                      196, 191, 217, 163, 232, 249, 180, 109, 328, 331, 169, 216,  72,  17, 214,  13, 337]) 
+    
     # grupoTreino_AT = choice(qtdInstancias, tamGrupoTreino, replace=False)
     # print(grupoTreino_AT); time.sleep(30)
     # grupoTreino_AT.sort()
@@ -500,18 +387,15 @@ def main():
     realizado_AT = 0
     setFEITOS : set = set()
     time_start = time.time()
+
     if get_boolean_input('Carregar dados anteriores do teste de parâmetros?', 'Load AT'):
       try:
         dfAT = pd.read_csv('teste_parametros.csv')
         print(f'Leitura de teste_parametros.csv ({dfAT.shape[0]} linhas) bem sucedida.')
       except:
-        try:
-          # !gdown -- '1G_jck8TL8yWDbtUC82nNCI5wfvpMWpo_'
-          dfAT = pd.read_csv('teste_parametros.csv')
-          print(f'Leitura de teste_parametros.csv ({dfAT.shape[0]} linhas) bem sucedida.')
-        except:
-          print("Arquivos de teste_parametros não encontrado!")
-
+        print("Arquivos de teste_parametros não encontrado!")
+        assert dfAT.shape[0]>0, 'Arquivo de teste_parametros.csv solicitado, mas não encontrado!'
+      
       for _, row in dfAT.iterrows():
         dadosAT = row.to_dict()
         dictAppend(dictAT, dadosAT)
@@ -534,9 +418,9 @@ def main():
     # Teste de argumentos do ANT_VND
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f'Tamanho GT: {len(grupoTreino_AT)}, t_lim: {t_lim_A}, rep: {numRep_A}, Tempo saves: {tempo_save_A}'
-          +f'\nNucleos: {nucleos}, Agendamentos: {LIMITE_agendamentos}, Carregados: {len(setFEITOS)}')
+          +f'\nNucleos: {nucleos_teste_param}, Agendamentos: {LIMITE_agendamentos}, Carregados: {len(setFEITOS)}')
     agendados_AT = set()
-    with ProcessPoolExecutor(max_workers = nucleos) as executor:
+    with ProcessPoolExecutor(max_workers = nucleos_teste_param) as executor:
       with tqdm(total=iters_restantes, smoothing = 0.001, desc="Testando argumentos ANT_VND") as pbar:
         for k in dfI[dfI['temSol']].index[grupoTreino_AT]:
           kmis = dfI.loc[k].kmis
@@ -640,12 +524,8 @@ def main():
       dfAT = pd.read_csv('teste_parametros.csv')
       print(f'Leitura de teste_parametros.csv ({dfAT.shape[0]} linhas) bem sucedida.')
     except:
-      try:
-        # !gdown -- '1G_jck8TL8yWDbtUC82nNCI5wfvpMWpo_'
-        dfAT = pd.read_csv('teste_parametros.csv')
-        print(f'Leitura de teste_parametros.csv ({dfAT.shape[0]} linhas) bem sucedida.')
-      except:
-        print(f'Arquivo de teste_parametros não encontrado!')
+      print(f'Arquivo de teste_parametros não encontrado!')
+      assert dfAT.shape[0]>0, 'Arquivo teste_parametros não encontrado!'
 
   # ==================== Formatando e obtendo as estatisticas desejadas ================
   assert isinstance(dfAT, pd.DataFrame), '\t ⚠️ DataFrame dfAT não definido.'
@@ -670,22 +550,15 @@ def main():
 
   teste_consistencia(dfI, dfAT)
 
-  """ **TOP 5 Parametros**"""
-
-  # idArg = "[1, 1.2, 0.3, 0.9, 0.1, 1, 10000, 10]"
-  # display(dfAT[(dfAT['idArg']==idArg)])
-  # display(df_ai[(df_ai['idArg'] == idArg)])
-  # display(df_i)
-  # display(dfA[dfA['idArg'] == idArg])
-
+  """**TOP 5 Parametros**"""
   #=====================================================================================
   top5 = dfA.groupby(['idH'])[dfA.columns[1:]].apply(lambda g: g.nlargest(5, 'score'))
   top5.to_csv('top5_teste_parametros.csv')
 
   print(top5)
 
-  """Função de parametros estática"""
 
+  """Função de parametros estática"""
   #===================================================================================
   def dArg(tamL, k, t_lim, idH)->dict:
 
@@ -750,18 +623,14 @@ def main():
 
     return dArgs[idH]
 
-  """## **Resultados**
+  """## **Resultados**"""
 
-  ---
-
-  Rodando Heuristicas
-  """
-
+  """Rodando Heuristicas"""
   # =====================================================================================                             <---------------- Rodando Heuristicas
-  num_rep_R    = 10  #@param {type: "slider", min:1, max:20, step:1}
-  t_lim_R      = 10 #@param {type: "slider", min:0.5, max:60, step:0.5}
-  tempo_save_R = 300 #@param {type: "slider", min:5, max:600, step:5}
-  nucleos_R  = 10 if os.cpu_count() == 12 else 2
+  num_rep_R    = 10  
+  t_lim_R      = 10 
+  tempo_save_R = 300
+  nucleos_teste_final  = 10 if os.cpu_count() == 12 else 2
   LIMITE_agendamentos_R = 40
 
   dfRT = pd.DataFrame()
@@ -783,12 +652,8 @@ def main():
         dfRT = pd.read_csv('resultados.csv', converters=conv)
         print(f'Leitura de resultados.csv ({dfRT.shape[0]} linhas) bem sucedida.')
       except:
-        try:
-          # !gdown -- '1J2ym9KsJ5-opcFKjIjiimtNQDXet24Xg'
-          dfRT = pd.read_csv('resultados.csv', converters=conv)
-          print(f'Leitura de resultados.csv ({dfRT.shape[0]} linhas) bem sucedida.')
-        except:
-          print(f'Arquivo de resultados não encontrado!')
+        print(f'Arquivo de resultados não encontrado!')
+        assert dfRT.shape[0]>0, 'Sem arquivo resultados.csv, que foi solicitado.'
 
       for _, row in dfRT.iterrows():
         dadosRT = row.to_dict()
@@ -802,9 +667,9 @@ def main():
     time_start_R = time.time()
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f't_lim: {t_lim_R}, rep: {num_rep_R} Tempo saves: {tempo_save_R}'+
-          f'\nNucleos:{nucleos_R}, Agendamentos: {LIMITE_agendamentos_R}')
+          f'\nNucleos:{nucleos_teste_final}, Agendamentos: {LIMITE_agendamentos_R}')
     agendados_R = set()
-    with ProcessPoolExecutor(max_workers=nucleos_R) as executor:
+    with ProcessPoolExecutor(max_workers=nucleos_teste_final) as executor:
       with tqdm(total=iters_restante_R, smoothing = 0.001, desc="Executando heurísticas") as pbar:
         for k in dfI[dfI['temSol']].index[OrdemTeste]:
           kmis = dfI.loc[k].kmis
@@ -851,18 +716,13 @@ def main():
       dfRT = pd.read_csv('resultados.csv', converters=conv)
       print(f'Leitura de resultados.csv ({dfRT.shape[0]} linhas) bem sucedida.')
     except:
-      try:
-        # !gdown -- '1J2ym9KsJ5-opcFKjIjiimtNQDXet24Xg'
-        dfRT = pd.read_csv('resultados.csv', converters=conv)
-        print(f'Leitura de resultados.csv ({dfRT.shape[0]} linhas) bem sucedida.')
-      except:
-        print(f'Arquivo de resultados não encontrado!')
+      print(f'Arquivo de resultados não encontrado!')
+      assert dfRT.shape[0] > 0, 'Erro arquivo faltante ou vazio!'  
 
   assert isinstance(dfRT, pd.DataFrame), '\t ⚠️ DataFrame dfRT não definido.'
   teste_consistencia(dfI, dfRT)
 
-  """ Analise dos resultados"""
-
+  """ Analise dos resultados geral"""
   # ===========================================================================================
   assert isinstance(dfRT, pd.DataFrame), '\t ⚠️ DataFrame do teste final não definido.'
   dfR_hi = dfRT.groupby(['idH', 'idI'])[['val', 'time']].apply(junta_repeticoes).reset_index()
@@ -882,8 +742,37 @@ def main():
   df_score = dfR.merge(df_limites, how='cross')
   dfR['score'] = df_score.apply(score_time_off, axis=1)
 
-  dfR.to_csv('resultados_avaliados.csv', index = False)
+  dfR.to_csv('resultados_avaliados_geral.csv', index = False)
   print(dfR)
+
+
+  """ Analise dos resultados por classe"""
+  # ===========================================================================================
+  dfRT_c = dfRT.merge(dfI[['id', 'classe']], left_on='idI', right_on='id').drop('id', axis=1)
+  dfR_hi = dfRT_c.groupby(['classe', 'idH', 'idI'])[['val', 'time']].apply(junta_repeticoes).reset_index()
+  dfR_i  = dfR_hi.groupby(['idI'])[['vmin', 'vavg', 'vmax', 'tavg']].apply(melhor_por_instancia).reset_index()
+  dfR_h_c  = dfR_hi.groupby(['classe','idH'])[['vmin', 'vavg', 'vmax', 'tavg']].apply(medias).reset_index()
+  cmp = dfR_hi.merge(dfR_i, on=['idI'])
+  cmp['eq_vmin'] = cmp['vmin'] == cmp['vmin_max']
+  cmp['eq_vmax'] = cmp['vmax'] == cmp['vmax_max']
+  cmp['eq_vavg'] = np.isclose(cmp['vavg'], cmp['vavg_max'], atol=1e-4)
+  cmp['eq_tavg'] = np.isclose(cmp['tavg'], cmp['tavg_min'], atol=1e-4)
+  cnt = cmp.groupby(['classe', 'idH'])[['eq_vmin', 'eq_vavg', 'eq_vmax', 'eq_tavg']].sum().rename(columns=lambda c: 'cnt_' + c[3:]).reset_index()
+  dfR_c = dfR_h_c.merge(cnt, on=['classe', 'idH'])
+  df_limites = dfR_c.groupby(['classe'])[dfR_c.columns[2:]].apply(limites_argumento)
+  df_score = dfR_c.merge(df_limites, left_on='classe', right_index=True)
+  dfR_c['score'] = df_score.apply(score_time_off, axis=1)
+
+  Score_PerClass = pd.DataFrame({'idH':dfR_c['idH'].unique()})
+  for i in dfR_c['classe'].unique():
+    subset = pd.DataFrame(dfR_c[dfR_c['classe'] == i][['classe', 'idH', 'score']])
+    subset = subset.rename(columns = {'score':f'score_{i}'})
+    # display(subset)
+    Score_PerClass = Score_PerClass.merge(subset, on='idH', how='left').drop('classe',axis=1)
+  # Score_PerClass = Score_PerClass.drop(['score_C2','score_C6'], axis=1)
+  Score_PerClass['avg'] = Score_PerClass.apply(lambda x: x[1:].mean(), axis=1)
+  Score_PerClass.to_csv('resultados_avaliados_por_classe.csv', index = False)
+  print(Score_PerClass.sort_values('avg', ascending=False))
 
 if __name__=="__main__":
   main()
