@@ -26,7 +26,6 @@ def HG_Bogue13(kmis: KMIS, t_lim: float = 120.0) -> SOLUCAO: #Heuristica Gulosa 
 """**Heuristica Gulosa parcial**
 É a "MaxAways" (ou "kInter"), mas aceitando uma solução parcial de partida.
 """
-
 def HG_Bogue13_parcial(kmis: KMIS, L_entrada : SOLUCAO, t_lim: float = 120.0) -> SOLUCAO:
   L = dc(L_entrada)
   BIN1 = kmis.Rcompleto #Conjunto R completo

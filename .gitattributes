@@ -1,0 +1,4 @@
+# Inclui sua pasta de bibliotecas pessoais
+KMIS/bibkmis/auxkmis.py linguist-language=Python
+KMIS/bibkmis/heuristicaskmis.py linguist-language=Python
+KMIS/bibkmis/typeskmis.py linguist-language=Python
