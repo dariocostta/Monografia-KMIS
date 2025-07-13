@@ -731,11 +731,11 @@ def main():
   tempo_save_TIR = 300
   nucleos_teste_TIR  = 10 if os.cpu_count() == 12 else 2
   LIMITE_agendamentos_TIR = 40
-  H_TIR = ['KIEst'  , 'GRASP_RG_TS', 'GRASP_RG_VND', 'GRASP_RG_VND2', 'ANT_TS',
-              'ANT_VND', 'ANT_VND2'   , 'ANT2_TS'     , 'ANT2_VND'    , 'ANT2_VND2']
+  H_TESTE_IR : list[str] = ['KIEst'  , 'GRASP_RG_TS', 'GRASP_RG_VND', 'GRASP_RG_VND2', 'ANT_TS',
+           'ANT_VND', 'ANT_VND2'   , 'ANT2_TS'     , 'ANT2_VND'    , 'ANT2_VND2']
   dfTIR = pd.DataFrame()
   if get_boolean_input('Iniciar o teste de heurísticas nas instâncias reduzidas?', 'Teste Final'):
-    dictT_TIR = {'idH':[], 'idI':[], 'rep':[], 'val':[], 'time':[]}#, 'val_b14':[], 'time_b14':[]}
+    dictT_TIR = {'idH':[], 'idIR':[], 'rep':[], 'val':[], 'time':[]}#, 'val_b14':[], 'time_b14':[]}
     dfTIR = pd.DataFrame(columns = list(dictT_TIR.keys())) # DataFrame com info da performance da Heuristica
     try:
       os.makedirs(os.getcwd()+"/saves_TIR", exist_ok=True)
@@ -759,10 +759,10 @@ def main():
       for _, row in dfTIR.iterrows():
         dadosRT = row.to_dict()
         dictAppend(dictT_TIR, dadosRT)
-      setFEITOS_TIR = set(zip(dictT_TIR['idH'], dictT_TIR['idI'], dictT_TIR['rep']))
+      setFEITOS_TIR = set(zip(dictT_TIR['idH'], dictT_TIR['idIR'], dictT_TIR['rep']))
       teste_consistencia(dfI, dfTIR)
 
-    total_iters_TIR = qtdInstancias_TIR * num_rep_TIR * len(H_TIR)
+    total_iters_TIR = qtdInstancias_TIR * num_rep_TIR * len(H_TESTE_IR)
     iters_restante_TIR = total_iters_TIR - len(setFEITOS_TIR)
 
     time_start_TIR = time.time()
@@ -776,7 +776,7 @@ def main():
         for k in dfI[dfI['temSol']].index[OrdemTeste_TIR]:
           kmis_b14 = dfI.loc[k].kmis_b14
           for rep in range(num_rep_TIR):  #numero de repetições
-            for H in H_TIR:
+            for H in H_TESTE_IR:
               if (H, dfI.loc[k, 'id'], rep) not in setFEITOS_TIR:
                 tarefa_agendada_TIR = executor.submit(run_wrapper, H, '_', kmis_b14, dArg(kmis_b14.tamL, kmis_b14.k, t_lim_TIR, H), k, rep)
                 agendados_TIR.add(tarefa_agendada_TIR)
@@ -786,7 +786,7 @@ def main():
                 concluidos, agendados_TIR = wait(agendados_TIR, return_when=FIRST_COMPLETED)
                 for feito in concluidos:
                   val_TIR, tempo_TIR, _,H_TIR, _, k_TIR, rep_TIR = feito.result()
-                  dadosIte = {'idH':f'{H_TIR}', 'idI':dfI.loc[k_TIR, 'id'], 'rep':f"{rep_TIR}",  'val':val_TIR, 'time':tempo_TIR }
+                  dadosIte = {'idH':f'{H_TIR}', 'idIR':dfI.loc[k_TIR, 'id'], 'rep':f"{rep_TIR}",  'val':val_TIR, 'time':tempo_TIR }
                   dictAppend(dictT_TIR, dadosIte)
                   pbar.update(1)
                   realizado_TIR+=1
@@ -799,7 +799,7 @@ def main():
           concluidos, agendados_TIR = wait(agendados_TIR, return_when=ALL_COMPLETED)
           for feito in concluidos:
             val_TIR, tempo_TIR, _, H_TIR, _, k_TIR, rep_TIR = feito.result()
-            dadosIte = {'idH':f'{H_TIR}', 'idI':dfI.loc[k_TIR, 'id'],'rep':rep_TIR, 'val':val_TIR, 'time':tempo_TIR }
+            dadosIte = {'idH':f'{H_TIR}', 'idIR':dfI.loc[k_TIR, 'id'],'rep':rep_TIR, 'val':val_TIR, 'time':tempo_TIR }
             dictAppend(dictT_TIR, dadosIte)
             pbar.update(1)
             realizado_TIR+=1
