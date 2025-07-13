@@ -7,9 +7,10 @@ Trabalho de conclusão de curso, para obtenção de bacharel em Matemática Indu
 """
 
 ## Bibliotecas
-from bibkmis.typeskmis import *
 from bibkmis.heuristicaskmis import *
 from bibkmis.auxkmis import *
+from bibkmis.typeskmis import SOLUCAO, KMIS
+
 
 import time
 import numpy as np              # Principal para ferramentas matematicas
@@ -726,154 +727,101 @@ def main():
 
   """Rodando Heuristicas nas Instâncias Reduzidas!"""
   # =====================================================================================                  <---------------- Rodando Heuristicas Instâncias Reduzidas
-  num_rep_TIR    = 10  
-  t_lim_TIR      = 10 
-  tempo_save_TIR = 300
-  nucleos_teste_TIR  = 10 if os.cpu_count() == 12 else 2
-  LIMITE_agendamentos_TIR = 40
+  num_rep_IRT    = 10  
+  t_lim_IRT      = 10 
+  tempo_save_IRT = 300
+  nucleos_teste_IRT  = 10 if os.cpu_count() == 12 else 2
+  LIMITE_agendamentos_IRT = 40
   H_TESTE_IR : list[str] = ['KIEst'  , 'GRASP_RG_TS', 'GRASP_RG_VND', 'GRASP_RG_VND2', 'ANT_TS',
            'ANT_VND', 'ANT_VND2'   , 'ANT2_TS'     , 'ANT2_VND'    , 'ANT2_VND2']
-  dfTIR = pd.DataFrame()
+  dfIRT = pd.DataFrame()
   if get_boolean_input('Iniciar o teste de heurísticas nas instâncias reduzidas?', 'Teste Final'):
-    dictT_TIR = {'idH':[], 'idIR':[], 'rep':[], 'val':[], 'time':[]}#, 'val_b14':[], 'time_b14':[]}
-    dfTIR = pd.DataFrame(columns = list(dictT_TIR.keys())) # DataFrame com info da performance da Heuristica
+    dictT_IRT = {'idH':[], 'idI':[], 'rep':[], 'val':[], 'time':[]}#, 'val_b14':[], 'time_b14':[]}
+    dfIRT = pd.DataFrame(columns = list(dictT_IRT.keys())) # DataFrame com info da performance da Heuristica
     try:
-      os.makedirs(os.getcwd()+"/saves_TIR", exist_ok=True)
-    except: print("Erro ao criar a pasta saves_TIR!")
+      os.makedirs(os.getcwd()+"/saves_IRT", exist_ok=True)
+    except: print("Erro ao criar a pasta saves_IRT!")
 
-    qtdInstancias_TIR = dfI[dfI['temSol']].shape[0]
-    OrdemTeste_TIR = np.random.permutation(qtdInstancias_TIR) # Ordem randomica para melhor previsão de termino
+    qtdInstancias_IRT = dfI[dfI['temSol']].shape[0]
+    OrdemTeste_IRT = np.random.permutation(qtdInstancias_IRT) # Ordem randomica para melhor previsão de termino
 
-    realizado_TIR = 0
-    setFEITOS_TIR = set()
+    realizado_IRT = 0
+    setFEITOS_IRT = set()
 
     if get_boolean_input('Carregar dados anteriores do teste nas instâncias reduzidas?', 'Load RT'):
       conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
       try:
-        dfTIR = pd.read_csv('resultados_reduzidas.csv', converters=conv)
-        print(f'Leitura de resultados_reduzidas.csv ({dfTIR.shape[0]} linhas) bem sucedida.')
+        dfIRT = pd.read_csv('resultados_reduzidas.csv', converters=conv)
+        print(f'Leitura de resultados_reduzidas.csv ({dfIRT.shape[0]} linhas) bem sucedida.')
       except:
         print(f'Arquivo de resultados_reduzidas não encontrado!')
-        assert dfTIR.shape[0]>0, 'Sem arquivo resultados_reduzidas.csv, que foi solicitado.'
+        assert dfIRT.shape[0]>0, 'Sem arquivo resultados_reduzidas.csv, que foi solicitado.'
 
-      for _, row in dfTIR.iterrows():
+      for _, row in dfIRT.iterrows():
         dadosRT = row.to_dict()
-        dictAppend(dictT_TIR, dadosRT)
-      setFEITOS_TIR = set(zip(dictT_TIR['idH'], dictT_TIR['idIR'], dictT_TIR['rep']))
-      teste_consistencia(dfI, dfTIR)
+        dictAppend(dictT_IRT, dadosRT)
+      setFEITOS_IRT = set(zip(dictT_IRT['idH'], dictT_IRT['idI'], dictT_IRT['rep']))
+      teste_consistencia(dfI, dfIRT)
 
-    total_iters_TIR = qtdInstancias_TIR * num_rep_TIR * len(H_TESTE_IR)
-    iters_restante_TIR = total_iters_TIR - len(setFEITOS_TIR)
+    total_iters_IRT = qtdInstancias_IRT * num_rep_IRT * len(H_TESTE_IR)
+    iters_restante_IRT = total_iters_IRT - len(setFEITOS_IRT)
 
-    time_start_TIR = time.time()
+    time_start_IRT = time.time()
     os.system('cls' if os.name == 'nt' else 'clear')
     print(' -------- Teste nas Instâncias Reduzidas ------------')
-    print(f't_lim: {t_lim_TIR}, rep: {num_rep_TIR} Tempo saves: {tempo_save_TIR}'+
-          f'\nNucleos:{nucleos_teste_TIR}, Agendamentos: {LIMITE_agendamentos_TIR}')
-    agendados_TIR = set()
-    with ProcessPoolExecutor(max_workers=nucleos_teste_TIR) as executor:
-      with tqdm(total=iters_restante_TIR, smoothing = 0.001, desc="Executando heurísticas") as pbar:
-        for k in dfI[dfI['temSol']].index[OrdemTeste_TIR]:
+    print(f't_lim: {t_lim_IRT}, rep: {num_rep_IRT} Tempo saves: {tempo_save_IRT}'+
+          f'\nNucleos:{nucleos_teste_IRT}, Agendamentos: {LIMITE_agendamentos_IRT}')
+    agendados_IRT = set()
+    with ProcessPoolExecutor(max_workers=nucleos_teste_IRT) as executor:
+      with tqdm(total=iters_restante_IRT, smoothing = 0.001, desc="Executando heurísticas") as pbar:
+        for k in dfI[dfI['temSol']].index[OrdemTeste_IRT]:
           kmis_b14 = dfI.loc[k].kmis_b14
-          for rep in range(num_rep_TIR):  #numero de repetições
+          for rep in range(num_rep_IRT):  #numero de repetições
             for H in H_TESTE_IR:
-              if (H, dfI.loc[k, 'id'], rep) not in setFEITOS_TIR:
-                tarefa_agendada_TIR = executor.submit(run_wrapper, H, '_', kmis_b14, dArg(kmis_b14.tamL, kmis_b14.k, t_lim_TIR, H), k, rep)
-                agendados_TIR.add(tarefa_agendada_TIR)
+              if (H, dfI.loc[k, 'id'], rep) not in setFEITOS_IRT:
+                tarefa_agendada_IRT = executor.submit(run_wrapper, H, '_', kmis_b14, dArg(kmis_b14.tamL, kmis_b14.k, t_lim_IRT, H), k, rep)
+                agendados_IRT.add(tarefa_agendada_IRT)
               else:
-                realizado_TIR+=1
-              if(len(agendados_TIR)>=LIMITE_agendamentos_TIR):
-                concluidos, agendados_TIR = wait(agendados_TIR, return_when=FIRST_COMPLETED)
+                realizado_IRT+=1
+              if(len(agendados_IRT)>=LIMITE_agendamentos_IRT):
+                concluidos, agendados_IRT = wait(agendados_IRT, return_when=FIRST_COMPLETED)
                 for feito in concluidos:
-                  val_TIR, tempo_TIR, _,H_TIR, _, k_TIR, rep_TIR = feito.result()
-                  dadosIte = {'idH':f'{H_TIR}', 'idIR':dfI.loc[k_TIR, 'id'], 'rep':f"{rep_TIR}",  'val':val_TIR, 'time':tempo_TIR }
-                  dictAppend(dictT_TIR, dadosIte)
+                  val_IRT, tempo_IRT, _,H_IRT, _, k_IRT, rep_IRT = feito.result()
+                  dadosIte = {'idH':f'{H_IRT}', 'idI':dfI.loc[k_IRT, 'id'], 'rep':f"{rep_IRT}",  'val':val_IRT, 'time':tempo_IRT }
+                  dictAppend(dictT_IRT, dadosIte)
                   pbar.update(1)
-                  realizado_TIR+=1
-                if(((time.time()-time_start_TIR)>tempo_save_TIR) and (realizado_TIR % 5 == 0)):
-                  time_start_TIR = time.time()
-                  save_df(dictT_TIR, realizado_TIR, 'TIR')
-                  pbar.set_postfix({"Salvos": f"{realizado_TIR} ({(realizado_TIR/total_iters_TIR)*100:.2f}%)"})
+                  realizado_IRT+=1
+                if(((time.time()-time_start_IRT)>tempo_save_IRT) and (realizado_IRT % 5 == 0)):
+                  time_start_IRT = time.time()
+                  save_df(dictT_IRT, realizado_IRT, 'IRT')
+                  pbar.set_postfix({"Salvos": f"{realizado_IRT} ({(realizado_IRT/total_iters_IRT)*100:.2f}%)"})
 
-        if(len(agendados_TIR)>0):
-          concluidos, agendados_TIR = wait(agendados_TIR, return_when=ALL_COMPLETED)
+        if(len(agendados_IRT)>0):
+          concluidos, agendados_IRT = wait(agendados_IRT, return_when=ALL_COMPLETED)
           for feito in concluidos:
-            val_TIR, tempo_TIR, _, H_TIR, _, k_TIR, rep_TIR = feito.result()
-            dadosIte = {'idH':f'{H_TIR}', 'idIR':dfI.loc[k_TIR, 'id'],'rep':rep_TIR, 'val':val_TIR, 'time':tempo_TIR }
-            dictAppend(dictT_TIR, dadosIte)
+            val_IRT, tempo_IRT, _, H_IRT, _, k_IRT, rep_IRT = feito.result()
+            dadosIte = {'idH':f'{H_IRT}', 'idI':dfI.loc[k_IRT, 'id'],'rep':rep_IRT, 'val':val_IRT, 'time':tempo_IRT }
+            dictAppend(dictT_IRT, dadosIte)
             pbar.update(1)
-            realizado_TIR+=1
+            realizado_IRT+=1
 
-          time_start_TIR = time.time()
-          save_df(dictT_TIR, realizado_TIR, 'TIR')
-          pbar.set_postfix({"Salvos": f"{realizado_TIR} ({(realizado_TIR/total_iters_TIR)*100:.2f}%)"})
+          time_start_IRT = time.time()
+          save_df(dictT_IRT, realizado_IRT, 'IRT')
+          pbar.set_postfix({"Salvos": f"{realizado_IRT} ({(realizado_IRT/total_iters_IRT)*100:.2f}%)"})
 
-    dfTIR = pd.DataFrame(dictT_TIR)
-    dfTIR.to_csv('resultados_reduzidas.csv', index=False)
+    dfIRT = pd.DataFrame(dictT_IRT)
+    dfIRT.to_csv('resultados_reduzidas.csv', index=False)
   else:
     conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
     try:
-      dfTIR = pd.read_csv('resultados_reduzidas.csv', converters=conv)
-      print(f'Leitura de resultados_reduzidas.csv ({dfTIR.shape[0]} linhas) bem sucedida.')
+      dfIRT = pd.read_csv('resultados_reduzidas.csv', converters=conv)
+      print(f'Leitura de resultados_reduzidas.csv ({dfIRT.shape[0]} linhas) bem sucedida.')
     except:
       print(f'Arquivo de resultados_reduzidas não encontrado!')
-      assert dfTIR.shape[0] > 0, 'Erro arquivo faltante ou vazio!'  
+      assert dfIRT.shape[0] > 0, 'Erro arquivo faltante ou vazio!'  
 
-  assert isinstance(dfTIR, pd.DataFrame), '\t ⚠️ DataFrame dfTIR não definido.'
-  teste_consistencia(dfI, dfTIR)
-
-
-  """ Analise dos resultados geral"""
-  # ===========================================================================================
-  assert isinstance(dfRT, pd.DataFrame), '\t ⚠️ DataFrame do teste final não definido.'
-  dfR_hi = dfRT.groupby(['idH', 'idI'])[['val', 'time']].apply(junta_repeticoes).reset_index()
-  dfR_h  = dfR_hi.groupby(['idH'])[['vmin', 'vavg', 'vmax', 'tavg']].apply(medias).reset_index()
-  dfR_i  = dfR_hi.groupby(['idI'])[['vmin', 'vavg', 'vmax', 'tavg']].apply(melhor_por_instancia).reset_index()
-  # Comparações
-  cmp = dfR_hi.merge(dfR_i, on=['idI'])
-  cmp['eq_vmin'] = cmp['vmin'] == cmp['vmin_max']
-  cmp['eq_vmax'] = cmp['vmax'] == cmp['vmax_max']
-  cmp['eq_vavg'] = np.isclose(cmp['vavg'], cmp['vavg_max'], atol=1e-4)
-  cmp['eq_tavg'] = np.isclose(cmp['tavg'], cmp['tavg_min'], atol=1e-4)
-
-  # Contagem e merge final
-  cnt = cmp.groupby(['idH'])[['eq_vmin', 'eq_vavg', 'eq_vmax', 'eq_tavg']].sum().rename(columns=lambda c: 'cnt_' + c[3:]).reset_index()
-  dfR = dfR_h.merge(cnt, on=['idH'])
-  df_limites = limites_argumento(dfR).to_frame().T
-  df_score = dfR.merge(df_limites, how='cross')
-  dfR['score'] = df_score.apply(score_time_off, axis=1)
-
-  dfR.to_csv('resultados_avaliados_geral.csv', index = False)
-  print(dfR)
-
-
-  """ Analise dos resultados por classe"""
-  # ===========================================================================================
-  dfRT_c = dfRT.merge(dfI[['id', 'classe']], left_on='idI', right_on='id').drop('id', axis=1)
-  dfR_hi = dfRT_c.groupby(['classe', 'idH', 'idI'])[['val', 'time']].apply(junta_repeticoes).reset_index()
-  dfR_i  = dfR_hi.groupby(['idI'])[['vmin', 'vavg', 'vmax', 'tavg']].apply(melhor_por_instancia).reset_index()
-  dfR_h_c  = dfR_hi.groupby(['classe','idH'])[['vmin', 'vavg', 'vmax', 'tavg']].apply(medias).reset_index()
-  cmp = dfR_hi.merge(dfR_i, on=['idI'])
-  cmp['eq_vmin'] = cmp['vmin'] == cmp['vmin_max']
-  cmp['eq_vmax'] = cmp['vmax'] == cmp['vmax_max']
-  cmp['eq_vavg'] = np.isclose(cmp['vavg'], cmp['vavg_max'], atol=1e-4)
-  cmp['eq_tavg'] = np.isclose(cmp['tavg'], cmp['tavg_min'], atol=1e-4)
-  cnt = cmp.groupby(['classe', 'idH'])[['eq_vmin', 'eq_vavg', 'eq_vmax', 'eq_tavg']].sum().rename(columns=lambda c: 'cnt_' + c[3:]).reset_index()
-  dfR_c = dfR_h_c.merge(cnt, on=['classe', 'idH'])
-  df_limites = dfR_c.groupby(['classe'])[dfR_c.columns[2:]].apply(limites_argumento)
-  df_score = dfR_c.merge(df_limites, left_on='classe', right_index=True)
-  dfR_c['score'] = df_score.apply(score_time_off, axis=1)
-
-  Score_PerClass = pd.DataFrame({'idH':dfR_c['idH'].unique()})
-  for i in dfR_c['classe'].unique():
-    subset = pd.DataFrame(dfR_c[dfR_c['classe'] == i][['classe', 'idH', 'score']])
-    subset = subset.rename(columns = {'score':f'score_{i}'})
-    # display(subset)
-    Score_PerClass = Score_PerClass.merge(subset, on='idH', how='left').drop('classe',axis=1)
-  # Score_PerClass = Score_PerClass.drop(['score_C2','score_C6'], axis=1)
-  Score_PerClass['avg'] = Score_PerClass.apply(lambda x: x[1:].mean(), axis=1)
-  Score_PerClass.to_csv('resultados_avaliados_por_classe.csv', index = False)
-  print(Score_PerClass.sort_values('avg', ascending=False))
+  assert isinstance(dfIRT, pd.DataFrame), '\t ⚠️ DataFrame dfIRT não definido.'
+  teste_consistencia(dfI, dfIRT)
 
 if __name__=="__main__":
   main()
