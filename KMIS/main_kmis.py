@@ -107,51 +107,6 @@ def main():
   assert isinstance(dfI, pd.DataFrame), '\t ⚠️ DataFrame de Instâncias não definido.'
   tamanhos_L = dfI[dfI['temSol']]['|L|'].value_counts().reset_index().sort_values(by='|L|')
   MAX_TAMANHO_L : int = int(tamanhos_L['|L|'].max())
-  # ========= Gráfico  ===========
-  # Contagens por classe
-  # qtdTotal = dfI.groupby('classe')['temSol'].count()
-  # qtdTrue  = dfI[dfI['temSol']].groupby('classe')['temSol'].count()
-  # qtdTrue  = qtdTrue.reindex(dfI['classe'].unique(), fill_value=0)
-  # percentual = (qtdTrue/qtdTotal)*100
-  # percentual = percentual.astype(float)
-
-  # # Criando a figura
-  # _, ax = plt.subplots(1, 2, figsize=(10, 4), gridspec_kw={'width_ratios': [3, 2]})
-
-  # # Gráfico de barras
-  # cores = ['#AEC6CF', '#CFCFC4']
-  # percentual.plot(kind='bar', color=cores[:len(percentual)], ax=ax[0], width=0.7)
-
-  # for i, v in enumerate(qtdTrue):
-  #     ax[0].text(i, percentual.iloc[i] + 1, f'{percentual.iloc[i]:.1f}', ha='center', fontsize=8)
-
-  # ax[0].set_xticklabels(percentual.index, rotation=0)
-  # ax[0].set_xlabel('Classe')
-  # ax[0].set_ylabel('Percentual (%)')
-  # ax[0].set_title('Percentual de Instâncias viáveis por Classe', fontweight='bold')
-  # ax[0].set_ylim(0, 110)
-
-  # # Construindo a tabela
-  # Clabel = {0.1:'baixo', 0.4:'médio', 0.7:'alto'}
-  # tabela_dados = [[v, f'{Clabel[k[0]]}', f'{Clabel[k[1]]}'] for k, v in classes.items()]
-  # for i in tabela_dados:
-  #     i.append(str(qtdTrue.loc[i[0]]))
-  # tabela_dados.append([' - ', ' - ', ' Total ', f'{qtdTrue.sum()}'])
-
-  # # Adicionando os tamanhos únicos de |L|
-  # tabela_dados.append(['|L|', 'Qtd.', '-', '-'])
-  # for _, row in tamanhos_L.iterrows():
-  #     tabela_dados.append([f'{row["|L|"]}', row['count'],'-', '-'])
-
-  # # Exibindo a tabela com destaque visual
-  # col_labels = ['Classe', 'p', 'k', 'Qtd.']
-  # ax[1].axis('tight')
-  # ax[1].axis('off')
-  # ax[1].table(cellText=tabela_dados,
-  #             colLabels=col_labels,
-  #             loc='center', cellLoc='center')
-
-  # plt.show()
 
   """Redução Bogue (2014) |<BR> [Bogue, 2014](#scrollTo=dyXmWyS0zIQS)"""
 
@@ -222,54 +177,6 @@ def main():
     # dfI.drop(['L', 'L_b14', 'Llabel_b14', 'Rlabel_b14'], axis = 1, inplace=True)
 
 
-
-  """Analise da Redução"""
-  #=============================================================================== 
-  # dfI_temSol = dfI[dfI['temSol']].reset_index()
-  # print((dfI_temSol['tempo_reducao']).describe())
-  # #display(dfI_temSol[['classe', 'classe_b14']])
-  # dfReducao = pd.DataFrame({'c_change':dfI_temSol[['classe', 'classe_b14']].apply(lambda x: f'{x.iloc[0]}  & {x.iloc[1]}', axis=1)})
-  # print(dfReducao.value_counts())
-
-  # tamanhos_L_b14 = dfI_temSol['|L|_b14'].value_counts().reset_index().sort_values(by='|L|_b14')
-  # qtdTotal_b14 = dfI.groupby('classe')['id'].count()
-  # qtdTrue_b14  = dfI_temSol.groupby('classe_b14')['id'].count()
-  # qtdTrue_b14  = qtdTrue_b14.reindex(dfI['classe'].unique(), fill_value=0)
-  # percentual_b14 = (qtdTrue_b14/qtdTotal_b14)*100
-  # percentual_b14 = percentual_b14.astype(float)
-  # change_b14 = (qtdTrue_b14 -qtdTrue).astype(float)
-
-  # # Cores condicionais
-  # colors = ['lightblue' if val < 0 else 'darkseagreen' for val in change_b14]
-
-  # # Criação do gráfico
-  # fig, ax = plt.subplots()
-  # change_b14.plot(kind='bar', ax=ax, color=colors, width=0.8)
-  # # Adiciona os valores sobre ou dentro das barras
-  # for i, val in enumerate(change_b14):
-  #   if val !=0:
-  #     ax.text(i, val-0.8 if val >= 0 else val + 0.7,  # Ajuste da posição vertical
-  #             f'+{val}' if val >= 0 else f'{val}',                      # Valor formatado
-  #             ha='center', va='bottom' if val >= 0 else 'top',  # Alinhamento vertical
-  #             fontsize=10, color='black')         # Estilo do texto
-
-  # # Ajustes estéticos conforme ABNT
-  # ax.set_xticks(range(len(change_b14.index)))
-  # ax.set_xticklabels(change_b14.index, rotation=0, fontsize=10)
-  # ax.set_xlabel('Classe', fontsize=12)
-  # ax.set_ylabel('Diferença\n(quantidade pós redução menos anterior)', fontsize=10)
-  # ax.set_title('Diferença de instâncias viáveis por classe pós redução', fontsize=14)
-
-  # # Adição de grade (comumente usada para facilitar leitura)
-  # ax.grid(True, which='major', axis='y', linestyle='--', linewidth=0.5)
-
-  # # Remoção da borda superior e direita
-  # ax.spines['top'].set_visible(False)
-  # ax.spines['right'].set_visible(False)
-
-  # plt.tight_layout()
-  # plt.savefig('tamanho_classe_diferenca_pos_reducao.pdf', format='pdf', bbox_inches='tight')
-  # plt.show()
 
   # @title --------- TESTE ZONE -----------
   #=================================================================================================
