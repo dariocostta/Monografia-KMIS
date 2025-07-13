@@ -10,6 +10,7 @@ Trabalho de conclusão de curso, para obtenção de bacharel em Matemática Indu
 from bibkmis.typeskmis import *
 from bibkmis.heuristicaskmis import *
 from bibkmis.auxkmis import *
+
 import time
 import numpy as np              # Principal para ferramentas matematicas
 from copy import deepcopy as dc # Usado para passar vetor sem dar problema de acesso
@@ -20,7 +21,7 @@ from tqdm import tqdm           # Barrinha de progresso
 import ast                      # Ler os litearias de tipos simples
 import os                       # Controle de pastas
 import sys                      # Modificar o nome da aba no PowerShell (Local)
-from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED    # Dividir entre nucleos_teste_param
+from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED    # Dividir entre nucleos
 
 
 # Pequena alteração no titulo do PowerSheel.
@@ -415,6 +416,7 @@ def main():
     iters_restantes = TOTAL_iters_AT-len(setFEITOS)
     # Teste de argumentos do ANT_VND
     os.system('cls' if os.name == 'nt' else 'clear')
+    print(' -------- Teste de Parâmetros ------------')
     print(f'Tamanho GT: {len(grupoTreino_AT)}, t_lim: {t_lim_A}, rep: {numRep_A}, Tempo saves: {tempo_save_A}'
           +f'\nNucleos: {nucleos_teste_param}, Agendamentos: {LIMITE_agendamentos}, Carregados: {len(setFEITOS)}')
     agendados_AT = set()
@@ -665,6 +667,7 @@ def main():
 
     time_start_R = time.time()
     os.system('cls' if os.name == 'nt' else 'clear')
+    print(' -------- Teste nas Instâncias Base ------------')
     print(f't_lim: {t_lim_R}, rep: {num_rep_R} Tempo saves: {tempo_save_R}'+
           f'\nNucleos:{nucleos_teste_final}, Agendamentos: {LIMITE_agendamentos_R}')
     agendados_R = set()
@@ -718,6 +721,107 @@ def main():
 
   assert isinstance(dfRT, pd.DataFrame), '\t ⚠️ DataFrame dfRT não definido.'
   teste_consistencia(dfI, dfRT)
+
+
+
+  """Rodando Heuristicas nas Instâncias Reduzidas!"""
+  # =====================================================================================                  <---------------- Rodando Heuristicas Instâncias Reduzidas
+  num_rep_TIR    = 10  
+  t_lim_TIR      = 10 
+  tempo_save_TIR = 300
+  nucleos_teste_TIR  = 10 if os.cpu_count() == 12 else 2
+  LIMITE_agendamentos_TIR = 40
+  H_TIR = ['KIEst'  , 'GRASP_RG_TS', 'GRASP_RG_VND', 'GRASP_RG_VND2', 'ANT_TS',
+              'ANT_VND', 'ANT_VND2'   , 'ANT2_TS'     , 'ANT2_VND'    , 'ANT2_VND2']
+  dfTIR = pd.DataFrame()
+  if get_boolean_input('Iniciar o teste de heurísticas nas instâncias reduzidas?', 'Teste Final'):
+    dictT_TIR = {'idH':[], 'idI':[], 'rep':[], 'val':[], 'time':[]}#, 'val_b14':[], 'time_b14':[]}
+    dfTIR = pd.DataFrame(columns = list(dictT_TIR.keys())) # DataFrame com info da performance da Heuristica
+    try:
+      os.makedirs(os.getcwd()+"/saves_TIR", exist_ok=True)
+    except: print("Erro ao criar a pasta saves_TIR!")
+
+    qtdInstancias_TIR = dfI[dfI['temSol']].shape[0]
+    OrdemTeste_TIR = np.random.permutation(qtdInstancias_TIR) # Ordem randomica para melhor previsão de termino
+
+    realizado_TIR = 0
+    setFEITOS_TIR = set()
+
+    if get_boolean_input('Carregar dados anteriores do teste nas instâncias reduzidas?', 'Load RT'):
+      conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
+      try:
+        dfTIR = pd.read_csv('resultados_reduzidas.csv', converters=conv)
+        print(f'Leitura de resultados_reduzidas.csv ({dfTIR.shape[0]} linhas) bem sucedida.')
+      except:
+        print(f'Arquivo de resultados_reduzidas não encontrado!')
+        assert dfTIR.shape[0]>0, 'Sem arquivo resultados_reduzidas.csv, que foi solicitado.'
+
+      for _, row in dfTIR.iterrows():
+        dadosRT = row.to_dict()
+        dictAppend(dictT_TIR, dadosRT)
+      setFEITOS_TIR = set(zip(dictT_TIR['idH'], dictT_TIR['idI'], dictT_TIR['rep']))
+      teste_consistencia(dfI, dfTIR)
+
+    total_iters_TIR = qtdInstancias_TIR * num_rep_TIR * len(H_TIR)
+    iters_restante_TIR = total_iters_TIR - len(setFEITOS_TIR)
+
+    time_start_TIR = time.time()
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print(' -------- Teste nas Instâncias Reduzidas ------------')
+    print(f't_lim: {t_lim_TIR}, rep: {num_rep_TIR} Tempo saves: {tempo_save_TIR}'+
+          f'\nNucleos:{nucleos_teste_TIR}, Agendamentos: {LIMITE_agendamentos_TIR}')
+    agendados_TIR = set()
+    with ProcessPoolExecutor(max_workers=nucleos_teste_TIR) as executor:
+      with tqdm(total=iters_restante_TIR, smoothing = 0.001, desc="Executando heurísticas") as pbar:
+        for k in dfI[dfI['temSol']].index[OrdemTeste_TIR]:
+          kmis_b14 = dfI.loc[k].kmis_b14
+          for rep in range(num_rep_TIR):  #numero de repetições
+            for H in H_TIR:
+              if (H, dfI.loc[k, 'id'], rep) not in setFEITOS_TIR:
+                tarefa_agendada_TIR = executor.submit(run_wrapper, H, '_', kmis_b14, dArg(kmis_b14.tamL, kmis_b14.k, t_lim_TIR, H), k, rep)
+                agendados_TIR.add(tarefa_agendada_TIR)
+              else:
+                realizado_TIR+=1
+              if(len(agendados_TIR)>=LIMITE_agendamentos_TIR):
+                concluidos, agendados_TIR = wait(agendados_TIR, return_when=FIRST_COMPLETED)
+                for feito in concluidos:
+                  val_TIR, tempo_TIR, _,H_TIR, _, k_TIR, rep_TIR = feito.result()
+                  dadosIte = {'idH':f'{H_TIR}', 'idI':dfI.loc[k_TIR, 'id'], 'rep':f"{rep_TIR}",  'val':val_TIR, 'time':tempo_TIR }
+                  dictAppend(dictT_TIR, dadosIte)
+                  pbar.update(1)
+                  realizado_TIR+=1
+                if(((time.time()-time_start_TIR)>tempo_save_TIR) and (realizado_TIR % 5 == 0)):
+                  time_start_TIR = time.time()
+                  save_df(dictT_TIR, realizado_TIR, 'TIR')
+                  pbar.set_postfix({"Salvos": f"{realizado_TIR} ({(realizado_TIR/total_iters_TIR)*100:.2f}%)"})
+
+        if(len(agendados_TIR)>0):
+          concluidos, agendados_TIR = wait(agendados_TIR, return_when=ALL_COMPLETED)
+          for feito in concluidos:
+            val_TIR, tempo_TIR, _, H_TIR, _, k_TIR, rep_TIR = feito.result()
+            dadosIte = {'idH':f'{H_TIR}', 'idI':dfI.loc[k_TIR, 'id'],'rep':rep_TIR, 'val':val_TIR, 'time':tempo_TIR }
+            dictAppend(dictT_TIR, dadosIte)
+            pbar.update(1)
+            realizado_TIR+=1
+
+          time_start_TIR = time.time()
+          save_df(dictT_TIR, realizado_TIR, 'TIR')
+          pbar.set_postfix({"Salvos": f"{realizado_TIR} ({(realizado_TIR/total_iters_TIR)*100:.2f}%)"})
+
+    dfTIR = pd.DataFrame(dictT_TIR)
+    dfTIR.to_csv('resultados_reduzidas.csv', index=False)
+  else:
+    conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
+    try:
+      dfTIR = pd.read_csv('resultados_reduzidas.csv', converters=conv)
+      print(f'Leitura de resultados_reduzidas.csv ({dfTIR.shape[0]} linhas) bem sucedida.')
+    except:
+      print(f'Arquivo de resultados_reduzidas não encontrado!')
+      assert dfTIR.shape[0] > 0, 'Erro arquivo faltante ou vazio!'  
+
+  assert isinstance(dfTIR, pd.DataFrame), '\t ⚠️ DataFrame dfTIR não definido.'
+  teste_consistencia(dfI, dfTIR)
+
 
   """ Analise dos resultados geral"""
   # ===========================================================================================
