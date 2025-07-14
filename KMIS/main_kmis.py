@@ -108,40 +108,6 @@ def main():
   tamanhos_L = dfI[dfI['temSol']]['|L|'].value_counts().reset_index().sort_values(by='|L|')
   MAX_TAMANHO_L : int = int(tamanhos_L['|L|'].max())
 
-  """Redução Bogue (2014) |<BR> [Bogue, 2014](#scrollTo=dyXmWyS0zIQS)"""
-
-  #===================================================================================
-  def reducao_Bogue14(kmis_entrada : KMIS) -> KMIS:
-    # Esta meio lento, mas já não sei o que melhorar
-    kmis = dc(kmis_entrada)
-    try:
-      lower = kmis_entrada.intersect(kInterEstendida(kmis_entrada))
-    except:
-      sol = SOLUCAO(kmis_entrada.k, kmis_entrada.tamL)
-      for i in range(kmis_entrada.k):
-        sol.append(i)
-      lower = kmis_entrada.intersect(sol)
-
-    k = kmis_entrada.k
-    has_change = True
-    while has_change:
-      has_change = False
-      # Primeira regra
-      limite_Lu = kmis.tamL - k
-      for u in range(kmis.tamL):
-        if((kmis.L[u].bit_count() < lower) or (Lu_tam(kmis, u, lower) > limite_Lu)):
-          kmis.remover('L', u)
-          has_change = True
-          break
-      # Segunda regra
-      limite_Rv = kmis.tamR - lower
-      for v in range(kmis.tamR):
-        if((kmis.R[v].bit_count() < k)   or    (Rv_tam(kmis, v, k)  > limite_Rv)):
-          kmis.remover('R', v)
-          has_change = True
-          break
-
-    return kmis
 
   """**Executar Redução**"""
   #===============================================================================                    <------- Executar Redução

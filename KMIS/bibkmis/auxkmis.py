@@ -203,6 +203,42 @@ def Rv_tam(kmis : KMIS, v : int, k : int) -> int:
   return rvk_tam
 
 
+"""Redução Bogue (2014) |<BR> [Bogue, 2014](#scrollTo=dyXmWyS0zIQS)"""
+#===================================================================================
+def reducao_Bogue14(kmis_entrada : KMIS) -> KMIS:
+  # Esta meio lento, mas já não sei o que melhorar
+  kmis = dc(kmis_entrada)
+  try:
+    lower = kmis_entrada.intersect(kInterEstendida(kmis_entrada))
+  except:
+    print("Erro na reducao")
+    sol = SOLUCAO(kmis_entrada.k, kmis_entrada.tamL)
+    for i in range(kmis_entrada.k):
+      sol.append(i)
+    lower = kmis_entrada.intersect(sol)
+
+  k = kmis_entrada.k
+  has_change = True
+  while has_change:
+    has_change = False
+    # Primeira regra
+    limite_Lu = kmis.tamL - k
+    for u in range(kmis.tamL):
+      if((kmis.L[u].bit_count() < lower) or (Lu_tam(kmis, u, lower) > limite_Lu)):
+        kmis.remover('L', u)
+        has_change = True
+        break
+    # Segunda regra
+    limite_Rv = kmis.tamR - lower
+    for v in range(kmis.tamR):
+      if((kmis.R[v].bit_count() < k)   or    (Rv_tam(kmis, v, k)  > limite_Rv)):
+        kmis.remover('R', v)
+        has_change = True
+        break
+
+  return kmis
+
+
 """Funções de estatísticas dos testes""" # Planos para reduzir isso, dá pra juntar algumas creio
 #===============================================================================================
 def junta_repeticoes(g):
@@ -247,7 +283,7 @@ def score_time_off(r):
   return pd.Series(
     {  #mv = media valor  e cnt = count
       'score':
-      int(100*(
+      int(10000*(
         15*(((r['mvmin']-r['mvmin_min'])/(r['mvmin_max']-r['mvmin_min'])) if (r['mvmin_max']-r['mvmin_min']) > 0 else 1) +
         20*(((r['mvavg']-r['mvavg_min'])/(r['mvavg_max']-r['mvavg_min'])) if (r['mvavg_max']-r['mvavg_min']) > 0 else 1) +
         15*(((r['mvmax']-r['mvmax_min'])/(r['mvmax_max']-r['mvmax_min'])) if (r['mvmax_max']-r['mvmax_min']) > 0 else 1) +
@@ -256,6 +292,6 @@ def score_time_off(r):
         20*(((r['cnt_vavg']-r['cnt_vavg_min'])/(r['cnt_vavg_max']-r['cnt_vavg_min'])) if (r['cnt_vavg_max']-r['cnt_vavg_min']) > 0 else 1) +
         15*(((r['cnt_vmax']-r['cnt_vmax_min'])/(r['cnt_vmax_max']-r['cnt_vmax_min'])) if (r['cnt_vmax_max']-r['cnt_vmax_min']) > 0 else 1)
         #0*(((r['cnt_tavg']-r['cnt_tavg_min'])/(r['cnt_tavg_max']-r['cnt_tavg_min'])) if (r['cnt_tavg_max']-r['cnt_tavg_min']) > 0 else 1)
-        ))/100
+        ))/10000
     }
   )
