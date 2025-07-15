@@ -24,6 +24,7 @@ import os                       # Controle de pastas
 import sys                      # Modificar o nome da aba no PowerShell (Local)
 from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED    # Dividir entre nucleos
 
+path_P = "arquivos_principais/"
 
 # Pequena alteração no titulo do PowerSheel.
 if os.name == 'nt':
@@ -84,7 +85,7 @@ def main():
       'Rlabel': ast.literal_eval
     }
     try:
-      dfI = pd.read_csv('instancias.csv', converters=conv)
+      dfI = pd.read_csv(path_P+'instancias.csv', converters=conv)
       print(f'Leitura de instancias.csv ({dfI.shape[0]} linhas) bem sucedida.')
     except:
       print('\n\n\t\tArquivo instancias não encontrado!!\n\n')
@@ -138,7 +139,7 @@ def main():
         dfI[i] = dictIR[i]
     colunas = ['id', 'p', 'k', '|L|', '|R|', 'L', 'temSol', 'classe', '|L|_b14', '|R|_b14',
               'L_b14', 'tempo_reducao', 'Llabel_b14', 'Rlabel_b14', 'classe_b14', 'p_b14']
-    dfI[colunas].to_csv('instancias.csv', index=False)
+    dfI[colunas].to_csv(path_P+'instancias.csv', index=False)
     print('Redução salva com sucesso!')
     # dfI.drop(['L', 'L_b14', 'Llabel_b14', 'Rlabel_b14'], axis = 1, inplace=True)
 
@@ -263,7 +264,7 @@ def main():
 
     if get_boolean_input('Carregar dados anteriores do teste de parâmetros?', 'Load AT'):
       try:
-        dfAT = pd.read_csv('teste_parametros.csv')
+        dfAT = pd.read_csv(path_P+'teste_parametros.csv')
         print(f'Leitura de teste_parametros.csv ({dfAT.shape[0]} linhas) bem sucedida.')
       except:
         print("Arquivos de teste_parametros não encontrado!")
@@ -392,10 +393,10 @@ def main():
           pbar.set_postfix({"Salvos": f"{realizado_AT} ({(realizado_AT/TOTAL_iters_AT)*100:.2f}%)"})
         
     dfAT = pd.DataFrame(dictAT)
-    dfAT.to_csv('teste_parametros.csv', index=False)
+    dfAT.to_csv(path_P+'teste_parametros.csv', index=False)
   else:
     try:
-      dfAT = pd.read_csv('teste_parametros.csv')
+      dfAT = pd.read_csv(path_P+'teste_parametros.csv')
       print(f'Leitura de teste_parametros.csv ({dfAT.shape[0]} linhas) bem sucedida.')
     except:
       print(f'Arquivo de teste_parametros não encontrado!')
@@ -427,7 +428,7 @@ def main():
   """**TOP 5 Parametros**"""
   #=====================================================================================
   top5 = dfA.groupby(['idH'])[dfA.columns[1:]].apply(lambda g: g.nlargest(5, 'score'))
-  top5.to_csv('top5_teste_parametros.csv')
+  top5.to_csv(path_P+'top5_teste_parametros.csv')
 
   print(top5)
 
@@ -524,7 +525,7 @@ def main():
     if get_boolean_input('Carregar dados anteriores do teste final?', 'Load RT'):
       conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
       try:
-        dfRT = pd.read_csv('resultados.csv', converters=conv)
+        dfRT = pd.read_csv(path_P+'resultados.csv', converters=conv)
         print(f'Leitura de resultados.csv ({dfRT.shape[0]} linhas) bem sucedida.')
       except:
         print(f'Arquivo de resultados não encontrado!')
@@ -583,11 +584,11 @@ def main():
           pbar.set_postfix({"Salvos": f"{realizado_R} ({(realizado_R/total_iters_R)*100:.2f}%)"})
 
     dfRT = pd.DataFrame(dictRT)
-    dfRT.to_csv('resultados.csv', index=False)
+    dfRT.to_csv(path_P+'resultados.csv', index=False)
   else:
     conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
     try:
-      dfRT = pd.read_csv('resultados.csv', converters=conv)
+      dfRT = pd.read_csv(path_P+'resultados.csv', converters=conv)
       print(f'Leitura de resultados.csv ({dfRT.shape[0]} linhas) bem sucedida.')
     except:
       print(f'Arquivo de resultados não encontrado!')
@@ -624,7 +625,7 @@ def main():
     if get_boolean_input('Carregar dados anteriores do teste nas instâncias reduzidas?', 'Load RT'):
       conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
       try:
-        dfIRT = pd.read_csv('resultados_reduzidas.csv', converters=conv)
+        dfIRT = pd.read_csv(path_P+'resultados_reduzidas.csv', converters=conv)
         print(f'Leitura de resultados_reduzidas.csv ({dfIRT.shape[0]} linhas) bem sucedida.')
       except:
         print(f'Arquivo de resultados_reduzidas não encontrado!')
@@ -683,11 +684,11 @@ def main():
           pbar.set_postfix({"Salvos": f"{realizado_IRT} ({(realizado_IRT/total_iters_IRT)*100:.2f}%)"})
 
     dfIRT = pd.DataFrame(dictT_IRT)
-    dfIRT.to_csv('resultados_reduzidas.csv', index=False)
+    dfIRT.to_csv(path_P+'resultados_reduzidas.csv', index=False)
   else:
     conv = {'sol' : ast.literal_eval, 'sol_b14' : ast.literal_eval}
     try:
-      dfIRT = pd.read_csv('resultados_reduzidas.csv', converters=conv)
+      dfIRT = pd.read_csv(path_P+'resultados_reduzidas.csv', converters=conv)
       print(f'Leitura de resultados_reduzidas.csv ({dfIRT.shape[0]} linhas) bem sucedida.')
     except:
       print(f'Arquivo de resultados_reduzidas não encontrado!')
