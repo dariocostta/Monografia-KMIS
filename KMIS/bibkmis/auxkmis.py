@@ -246,11 +246,13 @@ def junta_repeticoes(g):
                     'vmax': g['val'].max(), 'tavg': g['time'].mean()})
 def medias(g):
   return g.mean().rename(lambda x: 'm'+x)  # gera: mvmin, mvmax, mvavg, mtavg
+
 def melhor_por_instancia(g):
   return pd.Series({'vmin_max': g['vmin'].max(),
                     'vavg_max': g['vavg'].max(),
                     'vmax_max': g['vmax'].max(),
                     'tavg_min': g['tavg'].min()})
+
 def limites_argumento(g):
   return pd.Series({'mvmin_min'   : g['mvmin'].min()   , 'mvmin_max'   : g['mvmin'].max(),
                     'mvavg_min'   : g['mvavg'].min()   , 'mvavg_max'   : g['mvavg'].max(),
