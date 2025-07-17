@@ -24,7 +24,7 @@ import os                       # Controle de pastas
 import sys                      # Modificar o nome da aba no PowerShell (Local)
 from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, ALL_COMPLETED    # Dividir entre nucleos
 
-path_P = "arquivos_principais/"
+path_P = os.path.dirname(os.path.abspath(__file__))+"/arquivos_principais/"
 
 # Pequena alteração no titulo do PowerSheel.
 if os.name == 'nt':
@@ -156,12 +156,15 @@ def main():
       kmis_teste : list[str | KMIS] = [f'({tamL}, {tamR})_id_{int(np.random.random()*1000000)}']
       for _ in range(num_instancias):
         # p, k = 0.6+0.3*np.random.random(), int(tamL*0.3+(tamL*0.3)*np.random.random()+0.5)
-        p, k = 0.6, 30
-        kmis_teste.append(geraKMIS(tamL, tamR, p, k))
+        # p, k = 0.6, 30
+        # kmis_teste.append(geraKMIS(tamL, tamR, p, k))
         # kmis_teste.append(dfI[(dfI['|L|']==300) & (dfI['temSol'])].iloc[_].kmis)
-        # kmis_teste.append(dfI[dfI['id']=='C9p70k220L300R300_1'].iloc[0].kmis)
+        size = dfI[dfI['classe']=='C7'].shape[0]
+        rd = np.random.randint(size)
+        kmis_teste.append(dfI[dfI['classe']=='C7'].iloc[rd].kmis_b14)
+
     inicio_teste = time.time()
-    num_de_instancias = len(kmis_teste)
+    num_de_instancias = len(kmis_teste)-1
     print(kmis_teste[0])
     acumulado = {
       'HG': {'val': [], 'tempo': []}, 'KI' : {'val': [], 'tempo': []},
@@ -180,15 +183,15 @@ def main():
       assert isinstance(km, KMIS)
       tamL, tamR, p, k = km.tamL, km.tamR, km.p, km.k
       heuristicas = {
-        'HG': (HG_Bogue13, {}),
-        'KI': (kInterEstendida, {}),
-        #  'VND':(VND, {'L_entrada': kInterEstendida(km)}),
+        # 'HG': (HG_Bogue13, {}),
+        # 'KI': (kInterEstendida, {}),
+        # 'VND':(VND, {'L_entrada': kInterEstendida(km)}),
         # 'GRASP_RG_VND'      : (GRASP_RG_VND, {'alpha': 0.5,                     'maxIter': 500, 't_lim': 0.5}),
-        # 'GRASP_RG_TS'       : (GRASP_RG_TS,  {'alpha': 0.5,'tau':0.5, 'gama':5, 'maxIter': 500, 't_lim': 0.5}),
-        #  'ANT_TS'  : (ANT_TS,   {'alpha':1.0, 'beta':0.8, 'rho':0.3, 'q_zero':0.6, 'qtd_formigas': int(tamL*0.1), 'Q_reativo': 1,  'tau': 0.5, 'gama':5, 'maxIter': 300, 't_lim': 10}),
-        # 'ANT_VND' : (ANT_VND,  {'alpha':1.0, 'beta':0.6, 'rho':0.1, 'q_zero':0.95, 'qtd_formigas': int(tamL*0.1), 'Q_reativo': 1,                        'maxIter': 100, 't_lim': 10}),
+        'GRASP_RG_TS'       : (GRASP_RG_TS,  {'alpha': 0.5,'tau':0.5, 'gama':5, 'maxIter': 1000, 't_lim': 1000}),
+        # 'ANT_TS'  : (ANT_TS,   {'alpha':1.0, 'beta':0.8, 'rho':0.3, 'q_zero':0.6, 'qtd_formigas': int(tamL*0.1), 'Q_reativo': 1,  'tau': 0.5, 'gama':5, 'maxIter': 300, 't_lim': 1000}),
+        'ANT_VND' : (ANT_VND,  {'alpha':1.0, 'beta':0.8, 'rho':0.3, 'q_zero':1, 'qtd_formigas': int(tamL*0.1), 'Q_reativo': 5,                        'maxIter': 90, 't_lim': 10000}),
         # 'ANT2_VND': (ANT2_VND, {'alpha':1.0, 'beta':0.6, 'rho':0.1, 'q_zero':0.95, 'qtd_formigas_p': 0.1,                                                'maxIter': 100, 't_lim': 10}),
-        #  'ANT2_TS' : (ANT2_TS,  {'alpha':1.0, 'beta':0.8, 'rho':0.3, 'q_zero':0.6, 'qtd_formigas_p': 0.1,                          'tau': 0.5, 'gama':5, 'maxIter': 500, 't_lim': 10})
+        # 'ANT2_TS' : (ANT2_TS,  {'alpha':1.0, 'beta':0.8, 'rho':0.3, 'q_zero':0.6, 'qtd_formigas_p': 0.1,                          'tau': 0.5, 'gama':5, 'maxIter': 500, 't_lim': 10})
       }
       for rep in range(reps):
         for label, (H, args) in heuristicas.items():
@@ -204,9 +207,9 @@ def main():
             sol.L_linha.sort()
             print(f'Bug! -> {sol}')
           # if label in ["ANT_VND", "ANT2_VND"]:
-          print(f"{label:<20} = |∩Si| {valor:<4} | ⌚ {tempo:.4f} | |L'| {len(sol):<4}")
+          print(f"{label:<20} = |∩Si| {valor:<4} | ⌚ {tempo:.4f} | |L'| {len(sol):<4} | kmis {km}")
 
-    print(f"\n 📊 Médias após {reps*num_instancias} execuções ({num_instancias} instâncias × {reps} reps):")
+    print(f"\n 📊 Médias após {reps*num_de_instancias} execuções ({num_de_instancias} instâncias × {reps} reps):")
     for label in acumulado:
       if len(acumulado[label]['val']) > 0:
         valores = np.array(acumulado[label]['val'])
@@ -217,7 +220,9 @@ def main():
     total_tempo = time.time()-inicio_teste
 
     print(f'Tempo total do teste: {int(total_tempo/60)} min e {(total_tempo % 60):.4f} seg.')
+    input('Aperte qualquer tecla para continuar...')
 
+    
   """## **Parâmetros**"""
 
   """ **Teste de Parametros**"""
