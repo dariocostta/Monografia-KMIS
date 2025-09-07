@@ -25,6 +25,7 @@ class MainWindow(tk.Tk):
         self.configure(bg="#f5f5f5")
         self.set_style()
         self.create_widgets()
+        print(self.G.DFI.shape[0], " instâncias carregadas.")
 
     def set_style(self):
         style = ttk.Style(self)

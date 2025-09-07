@@ -1,5 +1,6 @@
 from gui_class.gui_bib import *
-from gui_class import StartupWindow as SW, MainWindow as MW
+from gui_class.StartupWindow import StartupWindow
+from gui_class.MainWindow import MainWindow
 
 class KMISApp: 	# Singleton to hold global variables
     MAX_TAMANHO_L : int = 300  # Valor padrão, será atualizado ao carregar as instâncias
@@ -16,5 +17,5 @@ class KMISApp: 	# Singleton to hold global variables
 
 if __name__ == "__main__":
     globalKMIS = KMISApp()
-    SW.StartupWindow(globalKMIS).mainloop()
-    MW.MainWindow(globalKMIS).mainloop()
+    StartupWindow(globalKMIS).mainloop()
+    MainWindow(globalKMIS).mainloop()
