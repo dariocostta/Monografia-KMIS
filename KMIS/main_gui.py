@@ -238,19 +238,20 @@ class StartupWindow(tk.Tk):
         self.configure(bg="#f5f5f5")
         self.set_style()
 
-        self.labels = ["Instâncias", "Teste de Parâmetros", "Teste Completo"]
+        self.labels = ["Instâncias", "Teste de Parâmetros", "Resultados"]
         self.progress_bars = []
         self.percent_labels = []
 
         for i, label in enumerate(self.labels):
-            ttk.Label(self, text=label, style="TLabel").pack(pady=(15 if i==0 else 5, 0))
+            # Label alinhada à esquerda
+            ttk.Label( self, text=label, style="TLabel", anchor="w").pack( fill="x", anchor="w", padx=20,  pady=(15 if i==0 else 5, 0))
+
+            # Frame que agrupa progress bar + %  
             frame = ttk.Frame(self, style="TFrame")
-            frame.pack(pady=2)
-            pb = ttk.Progressbar(
-                frame, length=220, mode='determinate', maximum=100, style="green.Horizontal.TProgressbar"
-            )
+            frame.pack( fill="x", anchor="w", padx=20, pady=2)
+            pb = ttk.Progressbar( frame, length=300, mode='determinate', maximum=100, style="green.Horizontal.TProgressbar")
             pb.pack(side="left")
-            percent = ttk.Label(frame, text="0%", width=5, anchor="e", style="TLabel")
+            percent = ttk.Label( frame, text="0%", width=5, anchor="e", style="TLabel")
             percent.pack(side="left", padx=8)
             self.progress_bars.append(pb)
             self.percent_labels.append(percent)
@@ -286,33 +287,14 @@ class StartupWindow(tk.Tk):
                     self.after(1, self.start_loading, 0, LoadStage.CSV_TESTE_PARAM)
                 else:
                     self.after(1, self.start_loading, 0, LoadStage.RECREATING_INSTANCIAS)
-        if stage == LoadStage.RECREATING_INSTANCIAS:
-            # Reinstanciar objetos KMIS a partir das linhas do CSV
-            try:
-                row = DFI.iloc[i]
-                kmis = KMIS(int(row['|L|']), int(row['|R|']), float(row['p']), int(row['k']), row['L'])
-                kmis_reduzido = KMIS(int(row['|L|_b14']), int(row['|R|_b14']), float(row['p']), int(row['k']), row['L_b14'])
-                kmis_reduzido.Llabel = row['Llabel_b14']
-                kmis_reduzido.Rlabel = row['Rlabel_b14']
-                dictI['kmis'].append(kmis)
-                dictI['kmis_b14'].append(kmis_reduzido)
-            except (KeyError, TypeError, ValueError) as e:
-                self.progress_bars[LoadBar.INSTANCIAS].config(style="red.Horizontal.TProgressbar", value=100)
-                print(f"Erro ao processar linha {i}: {e}")
-            if i < DFI.shape[0]-1:
-                self.progress_bars[LoadBar.INSTANCIAS].config(value=int(i/DFI.shape[0]*100))
-                self.percent_labels[LoadBar.INSTANCIAS]['text'] = f"{(i/DFI.shape[0])*100:.1f}%"
-                self.update_idletasks()
-                self.after(1, self.start_loading, i+1, LoadStage.RECREATING_INSTANCIAS)
-                return
-            else:
-                self.progress_bars[LoadBar.INSTANCIAS].config(value=100)
-                self.percent_labels[LoadBar.INSTANCIAS]['text'] = "100%"
-                DFI['kmis'] = dictI['kmis']
-                DFI['kmis_b14'] = dictI['kmis_b14']
-                tamanhos_L = DFI[DFI['temSol']]['|L|'].value_counts().reset_index().sort_values(by='|L|')
-                MAX_TAMANHO_L = int(tamanhos_L['|L|'].max())
-                self.after(1, self.start_loading, 0, LoadStage.CSV_TESTE_PARAM)
+
+        if stage == LoadStage.RECREATING_INSTANCIAS: # Slow, so threaded
+            # ==== Recriação dos objetos KMIS a partir do DataFrame DFI =====
+            worker = threading.Thread(
+                target=self._recreate_instances_thread,
+                daemon=True
+            )
+            worker.start()
 
         if stage == LoadStage.CSV_TESTE_PARAM:
             try:
@@ -365,6 +347,47 @@ class StartupWindow(tk.Tk):
         if stage == LoadStage.FINAL:
             self.ok_btn['state'] = "normal"
             self.update_idletasks()
+
+    def _recreate_instances_thread(self): # Slow, so threaded
+        global DFI, dictI, MAX_TAMANHO_L
+        total = DFI.shape[0]
+        for i in range(total):
+            try:
+                row = DFI.iloc[i]
+                kmis = KMIS(int(row['|L|']), int(row['|R|']), float(row['p']), int(row['k']), row['L'])
+                kmis_reduzido = KMIS(int(row['|L|_b14']), int(row['|R|_b14']), float(row['p']), int(row['k']), row['L_b14'])
+                kmis_reduzido.Llabel = row['Llabel_b14']
+                kmis_reduzido.Rlabel = row['Rlabel_b14']
+                dictI['kmis'].append(kmis)
+                dictI['kmis_b14'].append(kmis_reduzido)
+            except (KeyError, TypeError, ValueError) as e:
+                self.after(5, lambda : self.progress_bars[LoadBar.INSTANCIAS].config(style="red.Horizontal.TProgressbar", value=100))
+                print(f"Erro ao processar linha {i}: {e}")
+            finally:
+                pct  = int((i+1) / total * 100)
+                text = f"{(i+1) / total * 100:.1f}%"
+                self.after(16, lambda pct=pct, text=text: (
+                    self.progress_bars[LoadBar.INSTANCIAS].config(value=pct),
+                    self.percent_labels[LoadBar.INSTANCIAS].config(text=text),
+                    self.update_idletasks()
+                ))
+
+        try:
+            DFI['kmis'] = dictI['kmis']
+            DFI['kmis_b14'] = dictI['kmis_b14']
+            tamanhos_L = DFI[DFI['temSol']]['|L|'].value_counts().reset_index().sort_values(by='|L|')
+            MAX_TAMANHO_L = int(tamanhos_L['|L|'].max())
+        except Exception as e:
+            self.after(16, lambda: (
+                self.progress_bars[LoadBar.INSTANCIAS].config(style="red.Horizontal.TProgressbar", value=100),
+                messagebox.showerror("Erro", f"Erro ao coletar parâmetros: {e}")
+            ))
+        finally:
+            self.after(16, lambda: (
+                self.progress_bars[LoadBar.INSTANCIAS].config(value=100),
+                self.percent_labels[LoadBar.INSTANCIAS].config(text="100%"),
+                self.start_loading(0, LoadStage.CSV_TESTE_PARAM)
+            ))
 
     def launch_main(self):
         self.destroy()
