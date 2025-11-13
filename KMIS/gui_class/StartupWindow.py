@@ -19,52 +19,62 @@ class StartupWindow(tk.Tk):
     def __init__(self, globalInfo):
         super().__init__()
         self.G = globalInfo
+        self.configure(bg="white")
+        main_frame = ttk.Frame(self, style="White.TFrame")
+
+        style = ttk.Style(self)
+        style.theme_use('alt')
+        style.configure("TFrame", background="white")
+        style.configure("TLabel", background="white")
+        style.configure("green.Horizontal.TProgressbar", foreground="green", background="green")
+        style.configure("red.Horizontal.TProgressbar", foreground="red", background="red")
+        style.configure("gray.Horizontal.TProgressbar", foreground="black", background="gray")
+
         self.title("Carregando Dados KMIS")
-        self.geometry("400x220")
-        self.resizable(False, False)
-        self.configure(bg="#f5f5f5")
-        self.set_style()
+        self.geometry("800x600")
+        # Divide root into three rows to vertically center main_frame
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=0)
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(0, weight=1)
+
+        # Container for all widgets, centered in root
+        main_frame = ttk.Frame(self)
+        main_frame.grid(row=1, column=0)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.columnconfigure(1, weight=0)
 
         self.labels = ["Instâncias", "Teste de Parâmetros", "Resultados"]
         self.progress_bars = []
         self.percent_labels = []
 
-        for i, label in enumerate(self.labels):
-            ttk.Label(self, text=label, style="TLabel", anchor="w") \
-                .pack(fill="x", anchor="w", padx=20, pady=(15 if i == 0 else 5, 0))
+        for i, text in enumerate(self.labels):
+            row_label = i * 2
+            row_bar = row_label + 1
 
-            frame = ttk.Frame(self, style="TFrame")
-            frame.pack(fill="x", anchor="w", padx=20, pady=2)
+            # Section label
+            lbl = ttk.Label( main_frame, text=text, style="TLabel", anchor="w")
+            lbl.grid( row=row_label, column=0, columnspan=2, sticky="w", padx=20, pady=(15 if i == 0 else 5, 0))
 
-            pb = ttk.Progressbar(
-                frame, length=300, mode="determinate", maximum=100,
-                style="green.Horizontal.TProgressbar"
-            )
-            pb.pack(side="left")
+            # Progress bar
+            pb = ttk.Progressbar( main_frame, length=300, mode="determinate", maximum=100, style="green.Horizontal.TProgressbar")
+            pb.grid( row=row_bar, column=0, sticky="w", padx=(20, 0), pady=2)
 
-            percent = ttk.Label(frame, text="0%", width=5, anchor="e", style="TLabel")
-            percent.pack(side="left", padx=8)
+            # Percentage label
+            percent = ttk.Label( main_frame, text="0%", width=6, anchor="e", style="TLabel")
+            percent.grid( row=row_bar, column=1, sticky="e", padx=(5, 20))
 
             self.progress_bars.append(pb)
             self.percent_labels.append(percent)
 
-        self.ok_btn = ttk.Button(self, text="OK", command=self.destroy,
-                                 state="disabled", style="TButton")
-        self.ok_btn.pack(pady=15)
+        # OK button centered under the progress bars
+        btn_row = len(self.labels) * 2
+        self.ok_btn = ttk.Button( main_frame, text="OK", command=self.destroy, state="disabled", style="TButton")
+        self.ok_btn.grid( row=btn_row, column=0, columnspan=2, pady=15)
 
         self.start_loading()
 
-    def set_style(self):
-        style = ttk.Style(self)
-        style.theme_use("clam")
-        style.configure("green.Horizontal.TProgressbar", foreground="green", background="green")
-        style.configure("red.Horizontal.TProgressbar", foreground="red", background="red")
-        style.configure("gray.Horizontal.TProgressbar", foreground="black", background="gray")
-        style.configure("TLabel", background="#f5f5f5", font=("Arial", 11))
-        style.configure("TFrame", background="#f5f5f5")
-        style.configure("TButton", font=("Arial", 10))
-
-    def start_loading(self, i=0, stage=LoadStage.CSV_INSTANCIAS):
+    def start_loading(self, stage=LoadStage.CSV_INSTANCIAS):
         # Stage: carregar instâncias (CSV_INSTANCIAS)
         if stage == LoadStage.CSV_INSTANCIAS:
             try:
@@ -75,13 +85,12 @@ class StartupWindow(tk.Tk):
                 print(f"Leitura de instancias.csv ({self.G.DFI.shape[0]} linhas) bem sucedida.")
             except:
                 print("ERRO NO ARQUIVO instancias.csv")
-                self.progress_bars[LoadBar.INSTANCIAS] \
-                    .config(style="gray.Horizontal.TProgressbar", value=100)
+                self.progress_bars[LoadBar.INSTANCIAS].config(style="gray.Horizontal.TProgressbar", value=100)
                 self.G.DFI = pd.DataFrame(columns=list(self.G.dictI.keys()))
             finally:
                 next_stage = LoadStage.CSV_TESTE_PARAM if self.G.DFI.shape[0] == 0 \
                              else LoadStage.RECREATING_INSTANCIAS
-                self.after(1, self.start_loading, 0, next_stage)
+                self.after(1, self.start_loading, next_stage)
 
         # Stage: recriar instâncias (RECREATING_INSTANCIAS)
         if stage == LoadStage.RECREATING_INSTANCIAS:
@@ -109,7 +118,7 @@ class StartupWindow(tk.Tk):
                 self.G.DFAT = pd.DataFrame()
             finally:
                 self.update_idletasks()
-                self.after(1, self.start_loading, 0, LoadStage.CSV_RESULT)
+                self.after(1, self.start_loading, LoadStage.CSV_RESULT)
 
         # Stage: carregar resultados (CSV_RESULT)
         if stage == LoadStage.CSV_RESULT:
@@ -130,7 +139,7 @@ class StartupWindow(tk.Tk):
                 self.update_idletasks()
             finally:
                 self.update_idletasks()
-                self.after(200, self.start_loading, 0, LoadStage.CSV_RESULT_REDUZIDAS)
+                self.after(200, self.start_loading, LoadStage.CSV_RESULT_REDUZIDAS)
 
         # Stage: carregar resultados reduzidas (CSV_RESULT_REDUZIDAS)
         if stage == LoadStage.CSV_RESULT_REDUZIDAS:
@@ -145,12 +154,11 @@ class StartupWindow(tk.Tk):
                 self.update_idletasks()
             except:
                 print("ERRO NO ARQUIVO resultados_reduzidas.csv")
-                self.progress_bars[LoadBar.TESTE_COMPLETO] \
-                    .config(style="gray.Horizontal.TProgressbar", value=100)
+                self.progress_bars[LoadBar.TESTE_COMPLETO].config(style="gray.Horizontal.TProgressbar", value=100)
                 self.G.DFIRT = pd.DataFrame()
                 self.update_idletasks()
             finally:
-                self.after(1, self.start_loading, 0, LoadStage.FINAL)
+                self.after(1, self.start_loading, LoadStage.FINAL)
 
         # Stage final: habilita botão OK
         if stage == LoadStage.FINAL:
@@ -174,13 +182,11 @@ class StartupWindow(tk.Tk):
                 )
                 kmis_reduzido.Llabel = row['Llabel_b14']
                 kmis_reduzido.Rlabel = row['Rlabel_b14']
-
                 self.G.dictI['kmis'].append(kmis)
                 self.G.dictI['kmis_b14'].append(kmis_reduzido)
-            except (KeyError, TypeError, ValueError) as e:
+            except (KeyError, TypeError, ValueError, ZeroDivisionError) as e:
                 self.after(5, lambda:
-                    self.progress_bars[LoadBar.INSTANCIAS] \
-                        .config(style="red.Horizontal.TProgressbar", value=100)
+                    self.progress_bars[LoadBar.INSTANCIAS].config(style="red.Horizontal.TProgressbar")
                 )
                 print(f"Erro ao processar linha {i}: {e}")
             finally:
@@ -196,22 +202,16 @@ class StartupWindow(tk.Tk):
             self.G.DFI['kmis'] = self.G.dictI['kmis']
             self.G.DFI['kmis_b14'] = self.G.dictI['kmis_b14']
 
-            tamanhos_L = (
-                self.G.DFI[self.G.DFI['temSol']]['|L|']
-                .value_counts()
-                .reset_index()
-                .sort_values(by='|L|')
-            )
+            tamanhos_L = self.G.DFI[self.G.DFI['temSol']]['|L|'].value_counts().reset_index().sort_values(by='|L|')
             self.G.MAX_TAMANHO_L = int(tamanhos_L['|L|'].max())
         except Exception as e:
             self.after(16, lambda: (
-                self.progress_bars[LoadBar.INSTANCIAS] \
-                    .config(style="red.Horizontal.TProgressbar", value=100),
+                self.progress_bars[LoadBar.INSTANCIAS].config(style="red.Horizontal.TProgressbar", value=100),
                 messagebox.showerror("Erro", f"Erro ao coletar parâmetros: {e}")
             ))
         finally:
             self.after(16, lambda: (
                 self.progress_bars[LoadBar.INSTANCIAS].config(value=100),
                 self.percent_labels[LoadBar.INSTANCIAS].config(text="100%"),
-                self.start_loading(0, LoadStage.CSV_TESTE_PARAM)
+                self.start_loading(LoadStage.CSV_TESTE_PARAM)
             ))

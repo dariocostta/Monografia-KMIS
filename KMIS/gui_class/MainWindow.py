@@ -21,19 +21,13 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.G = globalInfo
         self.title("KMIS")
-        self.geometry("700x500")
-        self.configure(bg="#f5f5f5")
-        self.set_style()
+        self.geometry("800x600")
+        style = ttk.Style(self)
+        style.theme_use('alt')
+        style.configure("green.Horizontal.TProgressbar", foreground='green', background='green')
         self.create_widgets()
         print(self.G.DFI.shape[0], " instâncias carregadas.")
 
-    def set_style(self):
-        style = ttk.Style(self)
-        style.theme_use('clam')
-        style.configure("green.Horizontal.TProgressbar", foreground='green', background='green')
-        style.configure("TLabel", background="#f5f5f5", font=("Arial", 11))
-        style.configure("TFrame", background="#f5f5f5")
-        style.configure("TButton", font=("Arial", 10))
 
     def reset_defaults(self, caller : str):
         if caller == "Teste de Parâmetros":
@@ -61,7 +55,9 @@ class MainWindow(tk.Tk):
     def create_gerar_widgets(self, parent):
         ttk.Label(parent, text="Gerar Instâncias", font=("Arial", 14)).pack(pady=10)
 
+
         form_frame = ttk.Frame(parent)
+        form_frame.columnconfigure(2, weight=1)
         form_frame.pack(pady=10)
 
         self.param_vars = {}
@@ -70,7 +66,7 @@ class MainWindow(tk.Tk):
         ttk.Label(form_frame, text="Tamanhos das Instâncias:").grid(row=0, column=0, sticky="w", pady=2)
         self.param_vars['sizes'] = tk.StringVar()
         self.param_vars['sizes'].set(defaults["gerar"]["sizes"])
-        sizes_entry = ttk.Entry(form_frame, textvariable=self.param_vars['sizes'])
+        sizes_entry = ttk.Entry(form_frame, textvariable = self.param_vars['sizes'], width=50)
         sizes_entry.grid(row=0, column=1, pady=2)
 
         # Number of instances per class (default slider, stable label)
@@ -79,10 +75,10 @@ class MainWindow(tk.Tk):
         self.param_vars['num_per_class'].set(defaults["gerar"]["num_per_class"])
         num_scale = ttk.Scale(
             form_frame, from_=1, to=10, orient="horizontal",
-            variable=self.param_vars['num_per_class'], length=90,
+            variable=self.param_vars['num_per_class'], length=100,
             command=lambda v: self.param_vars['num_per_class'].set(int(float(v)))
         )
-        num_scale.grid(row=1, column=1, pady=2, sticky="w")
+        num_scale.grid(row=1, column=1, pady=2, sticky="ew")
         # Stable value label with fixed width, vertically centered
         self.num_label = ttk.Label(form_frame, textvariable=self.param_vars['num_per_class'], width=2, anchor="center", font=("Arial", 10))
         self.num_label.grid(row=1, column=2, padx=5, sticky="n")
